@@ -1,0 +1,92 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin — Orders{% endblock %}
+
+{% block admin_css %}
+<style>
+  .filter-bar { background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1.2rem; }
+  .filter-bar:hover { transform:none; }
+  .data-table { width:100%; }
+  .data-table th { background:#f8f4ef;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.65rem 1rem;color:var(--muted);border-bottom:1px solid var(--border); }
+  .data-table td { padding:.8rem 1rem;font-size:.86rem;border-bottom:1px solid var(--border);vertical-align:middle; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:#fafaf8; }
+  .table-card { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden; }
+  .table-card:hover { transform:none;box-shadow:none; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div class="admin-page-title">Orders</div>
+  <span class="text-muted-custom" style="font-size:.85rem;">{{ orders|length }} orders found</span>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar card">
+  <form method="GET" class="d-flex gap-2 flex-wrap align-items-end">
+    <div>
+      <label class="form-label mb-1" style="font-size:.8rem;">Search</label>
+      <input type="text" name="q" value="{{ search }}" class="form-control form-control-sm"
+             placeholder="Order ID, name, email..." style="width:220px;">
+    </div>
+    <div>
+      <label class="form-label mb-1" style="font-size:.8rem;">Status</label>
+      <select name="status" class="form-select form-select-sm" style="width:150px;">
+        <option value="">All Statuses</option>
+        {% for s in ['Pending','Paid','Shipped','Delivered','Cancelled'] %}
+        <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-accent btn-sm px-4">Filter</button>
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-sm" style="border:1px solid var(--border);border-radius:8px;">Clear</a>
+  </form>
+</div>
+
+<!-- Orders Table -->
+<div class="table-card card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr>
+        <th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th>
+        <th>Payment</th><th>Location</th><th>Date</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+        {% if orders %}
+          {% for o in orders %}
+          <tr>
+            <td><span class="fw-700">{{ o.order_id }}</span></td>
+            <td>
+              <div class="fw-500">{{ o.user_name }}</div>
+              <div class="text-muted-custom" style="font-size:.75rem;">{{ o.user_email }}</div>
+            </td>
+            <td class="fw-600">₹{{ "%.0f"|format(o.total_amount) }}</td>
+            <td><span class="badge-status status-{{ o.status|lower }}">{{ o.status }}</span></td>
+            <td style="font-size:.78rem;">
+              {% if o.razorpay_payment_id %}
+                <span class="text-success fw-600">Razorpay</span>
+                <div class="text-muted-custom" style="font-size:.7rem;">{{ o.razorpay_payment_id[:18] }}…</div>
+              {% else %}
+                <span class="text-muted-custom">{{ o.payment_id or 'COD' }}</span>
+              {% endif %}
+            </td>
+            <td style="font-size:.78rem;">
+              {% if o.city %}{{ o.city }}, {{ o.state }}{% else %}<span class="text-muted-custom">—</span>{% endif %}
+            </td>
+            <td class="text-muted-custom" style="font-size:.78rem;">
+              {{ o.created_at.strftime('%d %b %Y') if o.created_at else '—' }}
+            </td>
+            <td>
+              <a href="{{ url_for('admin.order_detail', order_id=o.order_id) }}"
+                 class="btn btn-sm btn-outline-accent" style="font-size:.76rem;padding:3px 12px;">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="8" class="text-center py-4 text-muted-custom">No orders found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

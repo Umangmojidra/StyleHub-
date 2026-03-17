@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<style>
+  .admin-sidebar {
+    background: var(--charcoal);
+    min-height: calc(100vh - 140px);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 68px;
+  }
+  .admin-nav-link {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .65rem 1.5rem;
+    color: #9a9a9a;
+    font-size: .88rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all .2s;
+    border-left: 3px solid transparent;
+  }
+  .admin-nav-link:hover { color: #fff; background: rgba(255,255,255,.05); }
+  .admin-nav-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(201,169,110,.08); }
+  .admin-nav-link i { font-size: 1rem; width: 20px; }
+
+  .admin-section-label {
+    padding: .4rem 1.5rem;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #555;
+    margin-top: .5rem;
+  }
+
+  .admin-main { padding: 1.5rem; }
+  .admin-page-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; }
+</style>
+{% block admin_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="background:var(--cream);min-height:calc(100vh - 140px);">
+
+  <!-- ─── Sidebar ─── -->
+  <div class="admin-sidebar d-none d-lg-block" style="width:220px;flex-shrink:0;">
+    <div style="padding:0 1.5rem 1rem;border-bottom:1px solid #2a2a2a;margin-bottom:.5rem;">
+      <div style="font-family:'Playfair Display',serif;color:var(--accent);font-size:1rem;font-weight:700;">
+        <i class="bi bi-shield-check me-2"></i>Admin Panel
+      </div>
+    </div>
+
+    <div class="admin-section-label">Overview</div>
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="admin-nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+      <i class="bi bi-speedometer2"></i>Dashboard
+    </a>
+    <a href="{{ url_for('admin.sales') }}"
+       class="admin-nav-link {% if request.endpoint == 'admin.sales' %}active{% endif %}">
+      <i class="bi bi-graph-up-arrow"></i>Sales Report
+    </a>
+
+    <div class="admin-section-label">Manage</div>
+    <a href="{{ url_for('admin.orders') }}"
+       class="admin-nav-link {% if 'admin.order' in request.endpoint %}active{% endif %}">
+      <i class="bi bi-bag-check"></i>Orders
+    </a>
+    <a href="{{ url_for('admin.payments') }}"
+       class="admin-nav-link {% if request.endpoint == 'admin.payments' %}active{% endif %}">
+      <i class="bi bi-credit-card"></i>Payments
+    </a>
+    <a href="{{ url_for('admin.users') }}"
+       class="admin-nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+      <i class="bi bi-people"></i>Users
+    </a>
+    <a href="{{ url_for('admin.products') }}"
+       class="admin-nav-link {% if 'admin.product' in request.endpoint %}active{% endif %}">
+      <i class="bi bi-grid"></i>Products
+    </a>
+
+    <div class="admin-section-label">Store</div>
+    <a href="{{ url_for('products.index') }}" class="admin-nav-link">
+      <i class="bi bi-shop"></i>View Store
+    </a>
+    <a href="{{ url_for('auth.logout') }}" class="admin-nav-link" style="color:#c0392b;">
+      <i class="bi bi-box-arrow-right"></i>Logout
+    </a>
+  </div>
+
+  <!-- ─── Main Content ─── -->
+  <div class="admin-main flex-fill">
+    <!-- Mobile nav -->
+    <div class="d-flex d-lg-none gap-2 mb-3 flex-wrap">
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-accent">Dashboard</a>
+      <a href="{{ url_for('admin.sales') }}"     class="btn btn-sm btn-outline-accent">Sales</a>
+      <a href="{{ url_for('admin.orders') }}"    class="btn btn-sm btn-outline-accent">Orders</a>
+      <a href="{{ url_for('admin.payments') }}"  class="btn btn-sm btn-outline-accent">Payments</a>
+      <a href="{{ url_for('admin.users') }}"     class="btn btn-sm btn-outline-accent">Users</a>
+      <a href="{{ url_for('admin.products') }}"  class="btn btn-sm btn-outline-accent">Products</a>
+    </div>
+
+    {% block admin_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}{% block admin_js %}{% endblock %}{% endblock %}

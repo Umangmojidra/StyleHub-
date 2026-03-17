@@ -1,0 +1,107 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin — Users{% endblock %}
+
+{% block admin_css %}
+<style>
+  .data-table { width:100%; }
+  .data-table th { background:#f8f4ef;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.65rem 1rem;color:var(--muted);border-bottom:1px solid var(--border); }
+  .data-table td { padding:.8rem 1rem;font-size:.86rem;border-bottom:1px solid var(--border);vertical-align:middle; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:#fafaf8; }
+  .table-card { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden; }
+  .table-card:hover { transform:none;box-shadow:none; }
+  .filter-bar { background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1.2rem; }
+  .filter-bar:hover { transform:none; }
+  .user-avatar { width:34px;height:34px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;color:var(--charcoal);flex-shrink:0; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-title mb-3">Users</div>
+
+<div class="filter-bar card">
+  <form method="GET" class="d-flex gap-2 align-items-end flex-wrap">
+    <div>
+      <label class="form-label mb-1" style="font-size:.8rem;">Search</label>
+      <input type="text" name="q" value="{{ search }}" class="form-control form-control-sm"
+             placeholder="Name or email..." style="width:250px;">
+    </div>
+    <button type="submit" class="btn btn-accent btn-sm px-4">Search</button>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-sm" style="border:1px solid var(--border);border-radius:8px;">Clear</a>
+    <span class="ms-auto text-muted-custom" style="font-size:.82rem;">{{ users|length }} users</span>
+  </form>
+</div>
+
+<div class="table-card card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr>
+        <th>User</th><th>Contact</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+        {% if users %}
+          {% for u in users %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar">{{ u.name[0].upper() }}</div>
+                <div>
+                  <div class="fw-600" style="font-size:.86rem;">{{ u.name }}</div>
+                  <div class="text-muted-custom" style="font-size:.74rem;">{{ u.id }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="font-size:.84rem;">{{ u.email }}</div>
+              <div class="text-muted-custom" style="font-size:.76rem;">{{ u.phone or '—' }}</div>
+            </td>
+            <td>
+              {% if u.role == 'admin' %}
+                <span class="badge" style="background:var(--accent);color:var(--charcoal);border-radius:20px;font-size:.75rem;padding:3px 10px;">
+                  <i class="bi bi-shield-check me-1"></i>Admin
+                </span>
+              {% else %}
+                <span class="badge" style="background:#f8f4ef;color:var(--muted);border-radius:20px;font-size:.75rem;padding:3px 10px;">User</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.status == 'active' %}
+                <span class="badge-status status-confirmed">Active</span>
+              {% elif u.status == 'blocked' %}
+                <span class="badge-status status-cancelled">Blocked</span>
+              {% else %}
+                <span class="badge-status status-pending">{{ u.status|title }}</span>
+              {% endif %}
+            </td>
+            <td class="text-muted-custom" style="font-size:.78rem;">
+              {{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}
+            </td>
+            <td>
+              {% if u.role != 'admin' %}
+              <form method="POST" action="{{ url_for('admin.toggle_user', user_id=u.id) }}"
+                    onsubmit="return confirm('{{ 'Block' if u.status == 'active' else 'Unblock' }} this user?')">
+                <button class="btn btn-sm" style="font-size:.75rem;padding:3px 12px;
+                        border:1px solid {{ '#fcc' if u.status == 'active' else '#c3e6cb' }};
+                        border-radius:7px;
+                        color:{{ 'var(--danger)' if u.status == 'active' else 'var(--success)' }};">
+                  {% if u.status == 'active' %}
+                    <i class="bi bi-slash-circle me-1"></i>Block
+                  {% else %}
+                    <i class="bi bi-check-circle me-1"></i>Unblock
+                  {% endif %}
+                </button>
+              </form>
+              {% else %}
+                <span class="text-muted-custom" style="font-size:.75rem;">Protected</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6" class="text-center py-4 text-muted-custom">No users found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f4ef 0%, #efe8de 100%);
+  }
+  .auth-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.12);
+    max-width: 500px;
+    width: 100%;
+  }
+  .auth-card:hover { transform: none; }
+  .auth-form { padding: 2.5rem; background: #fff; }
+
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap .bi {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: .95rem;
+  }
+  .input-icon-wrap .form-control { padding-left: 2.2rem; }
+
+  .btn-register {
+    background: var(--accent);
+    color: var(--charcoal);
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: .75rem;
+    font-size: 1rem;
+    letter-spacing: .5px;
+    transition: background .2s, transform .15s;
+    width: 100%;
+  }
+  .btn-register:hover { background: var(--accent2); color: #fff; transform: translateY(-2px); }
+
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--muted);
+    z-index: 10;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+
+        <div class="auth-card card">
+          <div style="height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+
+          <div class="auth-form">
+            <div class="text-center mb-4">
+              <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--charcoal);font-weight:700;">
+                Create Account
+              </div>
+              <p class="text-muted mb-0" style="font-size:.88rem;">Join StyleHub and start shopping</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+              <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-person"></i>
+                  <input type="text" name="name" class="form-control"
+                         placeholder="Your full name"
+                         value="{{ name or '' }}" required autocomplete="name">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Email Address</label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-envelope"></i>
+                  <input type="email" name="email" class="form-control"
+                         placeholder="you@example.com"
+                         value="{{ email or '' }}" required autocomplete="email">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Phone Number</label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-telephone"></i>
+                  <input type="tel" name="phone" class="form-control"
+                         placeholder="10-digit mobile number"
+                         value="{{ phone or '' }}" required maxlength="10">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Password</label>
+                <div class="input-icon-wrap position-relative">
+                  <i class="bi bi-lock"></i>
+                  <input type="password" name="password" id="password" class="form-control"
+                         placeholder="At least 6 characters" required>
+                  <i class="bi bi-eye password-toggle" onclick="togglePwd('password', this)"></i>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">Confirm Password</label>
+                <div class="input-icon-wrap position-relative">
+                  <i class="bi bi-lock-fill"></i>
+                  <input type="password" name="confirm_password" id="confirm_password" class="form-control"
+                         placeholder="Repeat your password" required>
+                  <i class="bi bi-eye password-toggle" onclick="togglePwd('confirm_password', this)"></i>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-register">Create Account</button>
+            </form>
+
+            <p class="text-center mt-4 mb-0" style="font-size:.88rem;">
+              Already have an account?
+              <a href="{{ url_for('auth.login') }}" style="color:var(--accent);font-weight:600;">Sign in</a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePwd(fieldId, icon) {
+    const field = document.getElementById(fieldId);
+    if (field.type === 'password') {
+      field.type = 'text';
+      icon.className = 'bi bi-eye-slash password-toggle';
+    } else {
+      field.type = 'password';
+      icon.className = 'bi bi-eye password-toggle';
+    }
+  }
+</script>
+{% endblock %}

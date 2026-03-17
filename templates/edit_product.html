@@ -1,0 +1,112 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Edit Product — {{ product.name }}{% endblock %}
+
+{% block admin_css %}
+<style>
+  .edit-card { background:#fff;border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:780px; }
+  .edit-card:hover { transform:none;box-shadow:none; }
+  .form-label { font-weight:600;font-size:.85rem; }
+  .img-preview { width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border); }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{{ url_for('admin.products') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+  <div class="admin-page-title">Edit Product</div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ 'danger' if cat=='danger' else 'success' }} alert-dismissible fade show mb-3" style="border-radius:10px;">
+    {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endwith %}
+
+<div class="edit-card card">
+  <form method="POST" action="{{ url_for('admin.update_product', product_id=product.product_id) }}">
+    <div class="row g-3">
+
+      <div class="col-12">
+        <div class="d-flex align-items-center gap-3 mb-3 p-3"
+             style="background:#f8f4ef;border-radius:10px;">
+          <img id="img-preview"
+               src="{{ product.image or 'https://placehold.co/100x100/f5f0ea/c9a96e?text=P' }}"
+               alt="" class="img-preview">
+          <div>
+            <div class="fw-700">{{ product.name }}</div>
+            <div class="text-muted-custom" style="font-size:.8rem;">{{ product.product_id }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <label class="form-label">Product Name *</label>
+        <input type="text" name="name" class="form-control" required value="{{ product.name }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Category</label>
+        <select name="cat_id" class="form-select">
+          <option value="">— None —</option>
+          {% for cat in categories %}
+          <option value="{{ cat.cat_id }}" {{ 'selected' if cat.cat_id == product.cat_id }}>
+            {{ cat.category_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3">{{ product.description or '' }}</textarea>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Price (₹) *</label>
+        <input type="number" name="price" class="form-control" required
+               min="1" step="0.01" value="{{ product.price }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Discount (%)</label>
+        <input type="number" name="discount" class="form-control"
+               min="0" max="100" step="0.1" value="{{ product.discount }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Stock *</label>
+        <input type="number" name="stock" class="form-control"
+               required min="0" value="{{ product.stock }}">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Image URL</label>
+        <input type="url" name="image" id="image-url" class="form-control"
+               value="{{ product.image or '' }}"
+               placeholder="https://images.unsplash.com/..."
+               oninput="previewImage(this.value)">
+      </div>
+
+      <div class="col-12 d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-accent">
+          <i class="bi bi-check-circle me-2"></i>Save Changes
+        </button>
+        <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+  function previewImage(url) {
+    const img = document.getElementById('img-preview');
+    if (url) {
+      img.src = url;
+      img.onerror = () => { img.src = 'https://placehold.co/100x100/f5f0ea/c9a96e?text=P'; };
+    }
+  }
+</script>
+{% endblock %}

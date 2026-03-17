@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Verify OTP{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f4ef 0%, #efe8de 100%);
+  }
+  .auth-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.12);
+    max-width: 440px;
+    width: 100%;
+  }
+  .auth-card:hover { transform: none; }
+  .auth-form { padding: 2.5rem; background: #fff; }
+
+  .otp-inputs { display: flex; gap: .75rem; justify-content: center; }
+  .otp-inputs input {
+    width: 52px; height: 56px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .otp-inputs input:focus { border-color: var(--accent); }
+
+  .btn-verify {
+    background: var(--accent);
+    color: var(--charcoal);
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: .75rem;
+    font-size: 1rem;
+    width: 100%;
+    transition: background .2s, transform .15s;
+  }
+  .btn-verify:hover { background: var(--accent2); color: #fff; transform: translateY(-2px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+
+        <div class="auth-card card">
+          <div style="height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+
+          <div class="auth-form text-center">
+            <div class="mb-3">
+              <div style="font-size:3rem;">📱</div>
+              <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--charcoal);font-weight:700;">
+                Verify OTP
+              </div>
+              <p class="text-muted mt-1 mb-0" style="font-size:.88rem;">
+                Enter the 6-digit code sent to your phone/email.<br>
+                <small class="text-muted">(Check server console in development)</small>
+              </p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.verify_otp') }}" novalidate id="otpForm">
+              <div class="otp-inputs my-4">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" autofocus>
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric">
+              </div>
+              <!-- Hidden field that collects all digits -->
+              <input type="hidden" name="otp" id="otpHidden">
+
+              <button type="submit" class="btn-verify">Verify &amp; Continue</button>
+            </form>
+
+            <p class="mt-4 mb-0" style="font-size:.85rem;">
+              <a href="{{ url_for('auth.register') }}" style="color:var(--accent);">
+                <i class="bi bi-arrow-left"></i> Back to registration
+              </a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const digits = document.querySelectorAll('.otp-digit');
+
+  digits.forEach((input, idx) => {
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/, '');
+      if (input.value && idx < digits.length - 1) digits[idx + 1].focus();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !input.value && idx > 0) digits[idx - 1].focus();
+    });
+  });
+
+  document.getElementById('otpForm').addEventListener('submit', (e) => {
+    const otp = Array.from(digits).map(d => d.value).join('');
+    document.getElementById('otpHidden').value = otp;
+    if (otp.length < 6) {
+      e.preventDefault();
+      alert('Please enter all 6 digits.');
+    }
+  });
+</script>
+{% endblock %}

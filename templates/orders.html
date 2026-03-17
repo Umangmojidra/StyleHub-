@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header { background: var(--charcoal); color: white; padding: 2.5rem 0; }
+  .page-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; }
+
+  .order-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .order-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.08); transform: none; }
+
+  .order-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: #fafaf8;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .order-id { font-weight: 700; font-size: 1rem; color: var(--charcoal); }
+  .order-date { font-size: .8rem; color: var(--muted); }
+  .order-card-body { padding: 1rem 1.5rem; }
+  .order-amount { font-size: 1.1rem; font-weight: 700; color: var(--accent2); }
+
+  .empty-state { text-align: center; padding: 5rem 0; color: var(--muted); }
+  .empty-state i { font-size: 5rem; color: var(--border); display: block; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="mb-1">My Orders</h1>
+        <p class="mb-0" style="color:rgba(255,255,255,.6);font-size:.88rem;">
+          Track and manage your order history
+        </p>
+      </div>
+      <a href="{{ url_for('products.index') }}" class="btn btn-nav-primary">
+        <i class="bi bi-grid me-2"></i>Shop More
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="py-4" style="background:var(--cream);">
+  <div class="container">
+
+    {% if orders %}
+
+    <div class="mb-3 d-flex align-items-center justify-content-between">
+      <span style="color:var(--muted);font-size:.88rem;">{{ orders|length }} order{{ 's' if orders|length != 1 }}</span>
+    </div>
+
+    {% for order in orders %}
+    <div class="order-card card">
+      <div class="order-card-header">
+        <div>
+          <div class="order-id">Order #{{ order.order_id }}</div>
+          <div class="order-date">
+            <i class="bi bi-calendar3 me-1"></i>
+            {{ order.created_at.strftime('%d %B %Y, %I:%M %p') if order.created_at else '—' }}
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span class="order-amount">₹{{ "%.0f"|format(order.total_amount) }}</span>
+          <span class="badge-status status-{{ order.status|lower }}">
+            {{ order.status }}
+          </span>
+          <a href="{{ url_for('orders.order_detail', order_id=order.order_id) }}"
+             class="btn btn-sm btn-outline-accent">
+            Details
+          </a>
+        </div>
+      </div>
+
+      <div class="order-card-body">
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <div class="text-muted-custom" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;">Payment ID</div>
+            <div style="font-size:.85rem;font-weight:500;">
+              {{ order.payment_id or 'COD' }}
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-muted-custom" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;">Status</div>
+            <div style="font-size:.85rem;">
+              {% if order.status == 'Paid' %}
+                <i class="bi bi-check-circle-fill text-success me-1"></i>Order Confirmed
+              {% elif order.status == 'Shipped' %}
+                <i class="bi bi-truck me-1 text-primary"></i>Shipped
+              {% elif order.status == 'Delivered' %}
+                <i class="bi bi-box-seam text-success me-1"></i>Delivered
+              {% elif order.status == 'Cancelled' %}
+                <i class="bi bi-x-circle-fill text-danger me-1"></i>Cancelled
+              {% else %}
+                <i class="bi bi-hourglass-split me-1"></i>Pending
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-sm-4 text-sm-end">
+            <a href="{{ url_for('orders.order_detail', order_id=order.order_id) }}"
+               class="btn btn-accent btn-sm px-4">
+              View Order Details
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-bag"></i>
+      <h3 style="font-family:'Playfair Display',serif;">No orders yet</h3>
+      <p>Time to treat yourself! Browse our collection.</p>
+      <a href="{{ url_for('products.index') }}" class="btn btn-accent px-5 mt-2" style="border-radius:10px;padding:.8rem 2rem;">
+        Shop Now
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

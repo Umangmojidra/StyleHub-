@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header { background: var(--charcoal); color: white; padding: 2.5rem 0; }
+  .page-header h1 { font-family: 'Playfair Display', serif; }
+
+  .section-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .section-card:hover { transform: none; }
+  .section-card h5 { font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 1.2rem; }
+
+  .address-option { border: 2px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem; cursor: pointer; transition: all .2s; margin-bottom: .75rem; }
+  .address-option:hover { border-color: var(--accent); }
+  .address-option.selected { border-color: var(--accent); background: #fdf8f0; }
+  .address-option input[type=radio] { accent-color: var(--accent); }
+
+  .default-badge { background: #d4edda; color: #155724; font-size: .72rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+
+  .add-address-form { display: none; border: 1.5px dashed var(--border); border-radius: 12px; padding: 1.2rem; margin-top: 1rem; background: #fafaf8; }
+  .add-address-form.show { display: block; }
+
+  .order-summary { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; position: sticky; top: 100px; }
+  .order-summary:hover { transform: none; }
+
+  .cart-item-row { display: flex; align-items: center; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid var(--border); }
+  .cart-item-row:last-child { border-bottom: none; }
+  .cart-item-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+
+  .summary-row { display: flex; justify-content: space-between; padding: .4rem 0; font-size: .9rem; }
+  .summary-row.total { border-top: 2px solid var(--charcoal); margin-top: .5rem; padding-top: .75rem; font-weight: 700; font-size: 1.05rem; }
+
+  .btn-pay { background: var(--charcoal); color: #fff; border: none; border-radius: 12px; padding: .9rem; font-size: 1rem; font-weight: 700; width: 100%; transition: background .2s, transform .15s; }
+  .btn-pay:hover { background: #16a34a; transform: translateY(-2px); }
+  .btn-pay:disabled { background: #999; cursor: not-allowed; transform: none; }
+
+  .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent); color: var(--charcoal); border-radius: 50%; font-size: .8rem; font-weight: 700; margin-right: .5rem; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1 class="mb-1"><i class="bi bi-lock-fill me-2" style="font-size:1.5rem;"></i>Secure Checkout</h1>
+    <p class="mb-0" style="color:rgba(255,255,255,.6);font-size:.88rem;">Complete your order safely</p>
+  </div>
+</div>
+
+<div class="py-4" style="background:var(--cream);">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- ─── Left: Address + Payment ─── -->
+      <div class="col-lg-7">
+
+        <!-- Step 1: Shipping Address -->
+        <div class="section-card card">
+          <h5><span class="step-badge">1</span>Shipping Address</h5>
+
+          {% if addresses %}
+            {% for addr in addresses %}
+            <div class="address-option {% if addr.is_default %}selected{% endif %}"
+                 onclick="selectAddress({{ addr.id }}, this)">
+              <div class="d-flex align-items-start gap-2">
+                <input type="radio" name="address_select" value="{{ addr.id }}"
+                       {% if addr.is_default %}checked{% endif %}
+                       style="margin-top:3px;">
+                <div class="flex-fill">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-600">{{ addr.full_name }}</span>
+                    {% if addr.is_default %}<span class="default-badge">Default</span>{% endif %}
+                  </div>
+                  <div style="font-size:.85rem;color:var(--charcoal);">
+                    {{ addr.address_line }}, {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}
+                  </div>
+                  <div style="font-size:.82rem;color:var(--muted);">
+                    <i class="bi bi-telephone me-1"></i>{{ addr.phone }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-3 text-muted-custom">
+              <i class="bi bi-geo-alt fs-3 d-block mb-2" style="color:var(--border);"></i>
+              No saved addresses. Add one below.
+            </div>
+          {% endif %}
+
+          <!-- Add New Address Toggle -->
+          <button type="button" class="btn btn-outline-accent btn-sm mt-2"
+                  onclick="document.getElementById('addAddrForm').classList.toggle('show')">
+            <i class="bi bi-plus-circle me-1"></i>Add New Address
+          </button>
+
+          <!-- Add Address Form -->
+          <div id="addAddrForm" class="add-address-form">
+            <form method="POST" action="{{ url_for('payment.add_address') }}">
+              <input type="hidden" name="redirect_to" value="checkout">
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name *</label>
+                  <input type="text" name="full_name" class="form-control" placeholder="Full name" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone *</label>
+                  <input type="tel" name="phone" class="form-control" placeholder="10-digit number" required maxlength="10">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Address Line *</label>
+                  <input type="text" name="address_line" class="form-control" placeholder="House/Flat No., Street, Area" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">City *</label>
+                  <input type="text" name="city" class="form-control" placeholder="City" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">State *</label>
+                  <input type="text" name="state" class="form-control" placeholder="State" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Pincode *</label>
+                  <input type="text" name="pincode" class="form-control" placeholder="6-digit" maxlength="6" required>
+                </div>
+                <div class="col-12">
+                  <div class="form-check mt-1">
+                    <input type="checkbox" name="is_default" class="form-check-input" id="isDefault">
+                    <label class="form-check-label" for="isDefault" style="font-size:.85rem;">Set as default address</label>
+                  </div>
+                </div>
+                <div class="col-12 mt-1">
+                  <button type="submit" class="btn btn-accent btn-sm px-4">Save Address</button>
+                  <button type="button" class="btn btn-sm ms-2"
+                          onclick="document.getElementById('addAddrForm').classList.remove('show')"
+                          style="border:1px solid var(--border);border-radius:8px;">Cancel</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Step 2: Payment -->
+        <div class="section-card card">
+          <h5><span class="step-badge">2</span>Payment</h5>
+
+          <div class="d-flex align-items-center gap-3 p-3 mb-3"
+               style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;">
+            <i class="bi bi-shield-check fs-4 text-success"></i>
+            <div>
+              <div class="fw-600" style="font-size:.9rem;">Secured by Razorpay</div>
+              <div style="font-size:.78rem;color:var(--muted);">UPI · Cards · Net Banking · Wallets — all supported</div>
+            </div>
+            <img src="https://razorpay.com/favicon.ico" alt="Razorpay" style="width:28px;height:28px;margin-left:auto;border-radius:6px;">
+          </div>
+
+          <button id="payBtn" class="btn-pay" onclick="initiatePayment()">
+            <i class="bi bi-credit-card me-2"></i>Pay ₹<span id="totalDisplay">{{ total }}</span>
+          </button>
+
+          <div class="text-center mt-3" style="font-size:.75rem;color:var(--muted);">
+            <i class="bi bi-lock me-1"></i>256-bit SSL encrypted. Your payment info is never stored.
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Right: Order Summary ─── -->
+      <div class="col-lg-5">
+        <div class="order-summary card">
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:1.2rem;">
+            Order Summary
+            <span class="text-muted-custom" style="font-size:.85rem;font-weight:400;">({{ cart_items|length }} items)</span>
+          </h5>
+
+          {% for item in cart_items %}
+          <div class="cart-item-row">
+            <img src="{{ item.image or 'https://placehold.co/48x48/f5f0ea/c9a96e?text=Img' }}" alt="{{ item.name }}">
+            <div class="flex-fill">
+              <div style="font-size:.85rem;font-weight:600;line-height:1.3;">{{ item.name }}</div>
+              <div style="font-size:.78rem;color:var(--muted);">Qty: {{ item.quantity }}</div>
+            </div>
+            <div class="fw-600" style="font-size:.9rem;">₹{{ "%.0f"|format(item.effective_price * item.quantity) }}</div>
+          </div>
+          {% endfor %}
+
+          <div class="mt-3">
+            <div class="summary-row"><span>Subtotal</span><span>₹{{ "%.0f"|format(subtotal) }}</span></div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span>{% if shipping == 0 %}<span class="text-success fw-600">FREE</span>{% else %}₹{{ shipping }}{% endif %}</span>
+            </div>
+            <div class="summary-row total"><span>Total</span><span class="text-accent">₹{{ "%.0f"|format(total) }}</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  let selectedAddressId = {% if addresses %}{% for addr in addresses %}{% if addr.is_default %}{{ addr.id }}{% endif %}{% endfor %}{% if not addresses|selectattr('is_default')|list %}null{% endif %}{% else %}null{% endif %};
+
+  // Select first address if no default
+  {% if addresses and not addresses|selectattr('is_default')|list %}
+  selectedAddressId = {{ addresses[0].id }};
+  document.querySelector('.address-option').classList.add('selected');
+  document.querySelector('input[name=address_select]').checked = true;
+  {% endif %}
+
+  function selectAddress(id, el) {
+    selectedAddressId = id;
+    document.querySelectorAll('.address-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    el.querySelector('input[type=radio]').checked = true;
+  }
+
+  async function initiatePayment() {
+    if (!selectedAddressId) {
+      alert('Please select or add a shipping address first.');
+      return;
+    }
+
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+    try {
+      // Step 1: Create Razorpay order on backend
+      const res = await fetch('/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address_id: selectedAddressId })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Failed to initiate payment.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Pay ₹{{ total }}';
+        return;
+      }
+
+      // Step 2: Open Razorpay checkout popup
+      const options = {
+        key:        data.key,
+        amount:     data.amount,
+        currency:   data.currency,
+        order_id:   data.razorpay_order_id,
+        name:       'StyleHub',
+        description:'Order Payment',
+        image:      '',
+        prefill: {
+          name:  '{{ user.get("email", "") if user else "" }}',
+          email: '{{ user.get("email", "") if user else "" }}'
+        },
+        theme: { color: '#c9a96e' },
+
+        handler: async function(response) {
+          // Step 3: Verify signature on backend
+          const verifyRes = await fetch('/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature
+            })
+          });
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.success) {
+            window.location.href = '/payment/success/' + verifyData.order_id;
+          } else {
+            alert('Payment verification failed: ' + (verifyData.error || 'Please contact support.'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Pay ₹{{ total }}';
+          }
+        },
+
+        modal: {
+          ondismiss: function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Pay ₹{{ total }}';
+          }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+
+    } catch(err) {
+      alert('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Pay ₹{{ total }}';
+    }
+  }
+</script>
+{% endblock %}

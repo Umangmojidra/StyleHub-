@@ -1,0 +1,197 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin — Sales Report{% endblock %}
+
+{% block admin_css %}
+<style>
+  .stat-card { background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.4rem; }
+  .stat-card:hover { box-shadow:0 6px 24px rgba(0,0,0,.09);transform:translateY(-3px); }
+  .stat-value { font-size:1.9rem;font-weight:700;line-height:1;color:var(--charcoal); }
+  .stat-label { font-size:.8rem;color:var(--muted);margin-top:3px; }
+  .stat-icon  { width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0; }
+
+  .section-card { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden; }
+  .section-card:hover { transform:none;box-shadow:none; }
+  .section-header { padding:1rem 1.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+  .section-header h6 { font-family:'Playfair Display',serif;margin:0;font-size:1rem; }
+
+  .data-table { width:100%; }
+  .data-table th { background:#f8f4ef;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.65rem 1rem;color:var(--muted);border-bottom:1px solid var(--border); }
+  .data-table td { padding:.75rem 1rem;font-size:.86rem;border-bottom:1px solid var(--border);vertical-align:middle; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:#fafaf8; }
+
+  .bar-fill { background: var(--accent); height:10px; border-radius:5px; transition:width .5s; }
+  .bar-track { background:#f0ebe4; height:10px; border-radius:5px; width:100%; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <div class="admin-page-title">Sales Report</div>
+    <div class="text-muted-custom" style="font-size:.85rem;">Complete sales overview</div>
+  </div>
+</div>
+
+<!-- ─── KPI Cards ─── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4">
+    <div class="stat-card">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#fff3cd;"><i class="bi bi-bag-check" style="color:#856404;"></i></div>
+        <div>
+          <div class="stat-value">{{ totals.total_orders }}</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="stat-card">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#d1ecf1;"><i class="bi bi-currency-rupee" style="color:#0c5460;"></i></div>
+        <div>
+          <div class="stat-value" style="font-size:1.5rem;">₹{{ "%.0f"|format(totals.total_revenue) }}</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="stat-card">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#d4edda;"><i class="bi bi-graph-up-arrow" style="color:#155724;"></i></div>
+        <div>
+          <div class="stat-value" style="font-size:1.5rem;">₹{{ "%.0f"|format(totals.avg_order_value) }}</div>
+          <div class="stat-label">Avg. Order Value</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Order Status Breakdown ─── -->
+<div class="row g-3 mb-4">
+  {% for s in status_breakdown %}
+  <div class="col-6 col-md-2">
+    <div class="stat-card text-center" style="padding:.9rem;">
+      <div class="fw-700" style="font-size:1.3rem;">{{ s.cnt }}</div>
+      <span class="badge-status status-{{ s.status|lower }}" style="font-size:.72rem;">{{ s.status }}</span>
+      <div class="text-muted-custom mt-1" style="font-size:.74rem;">₹{{ "%.0f"|format(s.revenue) }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4 mb-4">
+
+  <!-- ─── Monthly Revenue Table ─── -->
+  <div class="col-lg-7">
+    <div class="section-card card">
+      <div class="section-header">
+        <h6><i class="bi bi-calendar3 me-2 text-accent"></i>Monthly Revenue (Last 12 Months)</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr>
+            <th>Month</th><th>Orders</th><th>Revenue</th><th>Share</th>
+          </tr></thead>
+          <tbody>
+            {% set max_rev = monthly|map(attribute='revenue')|list|max if monthly else 1 %}
+            {% for m in monthly %}
+            <tr>
+              <td class="fw-600">{{ m.month }}</td>
+              <td>{{ m.orders }}</td>
+              <td class="fw-600">₹{{ "%.0f"|format(m.revenue) }}</td>
+              <td style="width:120px;">
+                <div class="bar-track">
+                  <div class="bar-fill" style="width:{{ (m.revenue / max_rev * 100)|int }}%;"></div>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center py-3 text-muted-custom">No data yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Revenue by Category ─── -->
+  <div class="col-lg-5">
+    <div class="section-card card">
+      <div class="section-header">
+        <h6><i class="bi bi-grid me-2 text-accent"></i>Revenue by Category</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr>
+            <th>Category</th><th>Units</th><th>Revenue</th>
+          </tr></thead>
+          <tbody>
+            {% set cat_max = by_category|map(attribute='revenue')|list|max if by_category else 1 %}
+            {% for cat in by_category %}
+            <tr>
+              <td>
+                <div class="fw-600" style="font-size:.84rem;">{{ cat.category_name }}</div>
+                <div class="bar-track mt-1" style="height:5px;">
+                  <div class="bar-fill" style="height:5px;width:{{ (cat.revenue / cat_max * 100)|int }}%;"></div>
+                </div>
+              </td>
+              <td class="text-muted-custom">{{ cat.units_sold }}</td>
+              <td class="fw-600">₹{{ "%.0f"|format(cat.revenue) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center py-3 text-muted-custom">No data yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Top 10 Products ─── -->
+<div class="section-card card">
+  <div class="section-header">
+    <h6><i class="bi bi-trophy me-2" style="color:#856404;"></i>Top Selling Products</h6>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr>
+        <th>#</th><th>Product</th><th>Units Sold</th><th>Revenue</th><th>Revenue Share</th>
+      </tr></thead>
+      <tbody>
+        {% set total_rev = totals.total_revenue if totals.total_revenue > 0 else 1 %}
+        {% for p in top_products %}
+        <tr>
+          <td class="fw-700 text-accent">{{ loop.index }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ p.image or 'https://placehold.co/36x36/f5f0ea/c9a96e?text=P' }}" alt=""
+                   style="width:36px;height:36px;object-fit:cover;border-radius:7px;border:1px solid var(--border);">
+              <span class="fw-600" style="font-size:.85rem;">{{ p.name }}</span>
+            </div>
+          </td>
+          <td class="fw-600">{{ p.units_sold }}</td>
+          <td class="fw-600">₹{{ "%.0f"|format(p.revenue) }}</td>
+          <td style="width:140px;">
+            <div class="d-flex align-items-center gap-2">
+              <div class="bar-track flex-fill">
+                <div class="bar-fill" style="width:{{ (p.revenue / total_rev * 100)|int }}%;"></div>
+              </div>
+              <span class="text-muted-custom" style="font-size:.76rem;white-space:nowrap;">
+                {{ "%.1f"|format(p.revenue / total_rev * 100) }}%
+              </span>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center py-4 text-muted-custom">No sales data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .product-detail-img {
+    width: 100%; max-height: 480px; object-fit: cover;
+    border-radius: 16px; border: 1px solid var(--border);
+  }
+  .img-placeholder {
+    width: 100%; height: 380px;
+    background: linear-gradient(135deg, #e8e0d5, #d4c9ba);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 4rem;
+  }
+  .price-original { font-size: 1rem; color: var(--muted); text-decoration: line-through; }
+  .price-final { font-size: 2rem; font-weight: 700; color: var(--charcoal); font-family: 'Playfair Display', serif; }
+  .discount-badge { background: #e74c3c; color: #fff; font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .stock-badge { font-size: .82rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .stock-in  { background: #d4edda; color: #155724; }
+  .stock-low { background: #fff3cd; color: #856404; }
+  .stock-out { background: #f8d7da; color: #721c24; }
+  .detail-label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: .3rem; }
+  .qty-control { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; width: fit-content; }
+  .qty-control button { border: none; background: var(--cream); padding: .5rem .9rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background .15s; }
+  .qty-control button:hover { background: var(--border); }
+  .qty-control input { border: none; border-left: 1.5px solid var(--border); border-right: 1.5px solid var(--border); width: 52px; text-align: center; font-size: 1rem; font-weight: 600; padding: .5rem 0; outline: none; }
+  .btn-add-cart { background: var(--charcoal); color: #fff; font-weight: 700; border: none; border-radius: 10px; padding: .75rem 2rem; font-size: 1rem; transition: background .2s, transform .15s; cursor: pointer; }
+  .btn-add-cart:hover { background: var(--accent2); transform: translateY(-2px); }
+  .btn-buy-now { background: var(--accent); color: var(--charcoal); font-weight: 700; border: none; border-radius: 10px; padding: .75rem 2rem; font-size: 1rem; transition: background .2s, transform .15s; cursor: pointer; }
+  .btn-buy-now:hover { background: var(--accent2); color: #fff; transform: translateY(-2px); }
+  .related-card { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: #fff; transition: transform .2s, box-shadow .2s; text-decoration: none; color: inherit; display: block; }
+  .related-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.1); color: inherit; }
+  .related-card img { width: 100%; height: 200px; object-fit: cover; }
+  .related-card .no-img { width: 100%; height: 200px; background: linear-gradient(135deg, #e8e0d5, #d4c9ba); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb" style="font-size:.85rem;">
+      <li class="breadcrumb-item"><a href="{{ url_for('products.index') }}" style="color:var(--accent);">Shop</a></li>
+      {% if product.category_name %}
+      <li class="breadcrumb-item">
+        <a href="{{ url_for('products.index', category=product.cat_id) }}" style="color:var(--accent);">{{ product.category_name }}</a>
+      </li>
+      {% endif %}
+      <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-5">
+    <div class="col-lg-5">
+      {% if product.image %}
+        <img src="{{ product.image }}" alt="{{ product.name }}" class="product-detail-img">
+      {% else %}
+        <div class="img-placeholder"><i class="bi bi-image"></i></div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-7">
+      {% if product.category_name %}
+      <span style="font-size:.78rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;">{{ product.category_name }}</span>
+      {% endif %}
+      <h1 class="mt-1 mb-2" style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;">{{ product.name }}</h1>
+
+      {% if product.stock > 10 %}
+        <span class="stock-badge stock-in"><i class="bi bi-check-circle me-1"></i>In Stock ({{ product.stock }} available)</span>
+      {% elif product.stock > 0 %}
+        <span class="stock-badge stock-low"><i class="bi bi-exclamation-triangle me-1"></i>Only {{ product.stock }} left!</span>
+      {% else %}
+        <span class="stock-badge stock-out"><i class="bi bi-x-circle me-1"></i>Out of Stock</span>
+      {% endif %}
+
+      <div class="mt-3">
+        {% set effective = product.price * (1 - product.discount / 100) %}
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <span class="price-final">₹{{ "%.2f"|format(effective) }}</span>
+          {% if product.discount and product.discount > 0 %}
+            <span class="price-original">₹{{ "%.2f"|format(product.price) }}</span>
+            <span class="discount-badge">{{ product.discount|int }}% OFF</span>
+          {% endif %}
+        </div>
+        {% if product.discount and product.discount > 0 %}
+        <div style="font-size:.82rem;color:#2d8a4e;margin-top:.25rem;">
+          <i class="bi bi-tag-fill me-1"></i>You save ₹{{ "%.2f"|format(product.price - effective) }}
+        </div>
+        {% endif %}
+      </div>
+
+      {% if product.description %}
+      <div class="mt-3">
+        <div class="detail-label">Description</div>
+        <p style="color:var(--muted);line-height:1.7;font-size:.92rem;">{{ product.description }}</p>
+      </div>
+      {% endif %}
+
+      <div class="row g-3 mt-0">
+        {% if product.size %}
+        <div class="col-auto">
+          <div class="detail-label">Available Sizes</div>
+          <div style="font-weight:500;font-size:.9rem;">{{ product.size }}</div>
+        </div>
+        {% endif %}
+        {% if product.color %}
+        <div class="col-auto">
+          <div class="detail-label">Color</div>
+          <div style="font-weight:500;font-size:.9rem;">{{ product.color }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if product.stock > 0 %}
+      <div class="mt-4">
+        <div class="detail-label mb-2">Quantity</div>
+        <div class="qty-control">
+          <button type="button" onclick="changeQty(-1)">−</button>
+          <input type="number" id="qtyInput" value="1" min="1" max="{{ product.stock }}" readonly>
+          <button type="button" onclick="changeQty(1)">+</button>
+        </div>
+
+        <div class="d-flex gap-3 flex-wrap mt-4">
+          {% if user %}
+          <form method="POST" action="{{ url_for('cart.add_to_cart') }}" id="cartForm">
+            <input type="hidden" name="product_id" value="{{ product.product_id }}">
+            <input type="hidden" name="quantity" id="cartQty" value="1">
+            <button type="submit" class="btn-add-cart">
+              <i class="bi bi-cart-plus me-2"></i>Add to Cart
+            </button>
+          </form>
+          <button class="btn-buy-now" id="buyNowBtn">
+            <i class="bi bi-lightning-fill me-2"></i>Buy Now
+          </button>
+          {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn-add-cart" style="text-decoration:none;display:inline-block;">
+            <i class="bi bi-person me-2"></i>Login to Buy
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="mt-4">
+        <button class="btn-add-cart" disabled style="opacity:.5;cursor:not-allowed;">
+          <i class="bi bi-x-circle me-2"></i>Out of Stock
+        </button>
+      </div>
+      {% endif %}
+
+      <div class="mt-4">
+        <div class="row g-2">
+          <div class="col-6"><div style="font-size:.8rem;color:var(--muted);"><i class="bi bi-truck me-1" style="color:var(--accent);"></i>Free delivery above ₹999</div></div>
+          <div class="col-6"><div style="font-size:.8rem;color:var(--muted);"><i class="bi bi-arrow-counterclockwise me-1" style="color:var(--accent);"></i>Easy returns</div></div>
+          <div class="col-6"><div style="font-size:.8rem;color:var(--muted);"><i class="bi bi-shield-check me-1" style="color:var(--accent);"></i>Secure payments</div></div>
+          <div class="col-6"><div style="font-size:.8rem;color:var(--muted);"><i class="bi bi-award me-1" style="color:var(--accent);"></i>Quality assured</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if related %}
+  <div class="mt-5 pt-4" style="border-top:1px solid var(--border);">
+    <h3 class="mb-4" style="font-family:'Playfair Display',serif;">You May Also Like</h3>
+    <div class="row row-cols-2 row-cols-md-4 g-3">
+      {% for item in related %}
+      <div class="col">
+        <a href="{{ url_for('products.detail', product_id=item.product_id) }}" class="related-card">
+          {% if item.image %}
+            <img src="{{ item.image }}" alt="{{ item.name }}">
+          {% else %}
+            <div class="no-img"><i class="bi bi-image"></i></div>
+          {% endif %}
+          <div class="p-3">
+            <div style="font-weight:600;font-size:.9rem;margin-bottom:.25rem;">{{ item.name }}</div>
+            <div style="color:var(--accent);font-weight:700;font-size:.95rem;">
+              ₹{{ "%.0f"|format(item.price * (1 - item.discount / 100)) }}
+              {% if item.discount > 0 %}
+              <span style="font-size:.75rem;color:var(--muted);text-decoration:line-through;font-weight:400;margin-left:.3rem;">₹{{ "%.0f"|format(item.price) }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const maxQty = {{ product.stock }};
+  function changeQty(delta) {
+    const input = document.getElementById('qtyInput');
+    let val = parseInt(input.value) + delta;
+    if (val < 1) val = 1;
+    if (val > maxQty) val = maxQty;
+    input.value = val;
+    const cq = document.getElementById('cartQty');
+    if (cq) cq.value = val;
+  }
+  const cartForm = document.getElementById('cartForm');
+  if (cartForm) {
+    cartForm.addEventListener('submit', () => {
+      document.getElementById('cartQty').value = document.getElementById('qtyInput').value;
+    });
+  }
+  const buyBtn = document.getElementById('buyNowBtn');
+  if (buyBtn) {
+    buyBtn.addEventListener('click', function() {
+      const qty = parseInt(document.getElementById('qtyInput').value);
+      fetch('{{ url_for("cart.add_to_cart") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: '{{ product.product_id }}', quantity: qty })
+      })
+      .then(() => { window.location.href = '{{ url_for("payment.checkout") }}'; })
+      .catch(() => { window.location.href = '{{ url_for("payment.checkout") }}'; });
+    });
+  }
+</script>
+{% endblock %}

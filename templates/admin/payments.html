@@ -1,0 +1,95 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin — Payments{% endblock %}
+
+{% block admin_css %}
+<style>
+  .data-table { width:100%; }
+  .data-table th { background:#f8f4ef;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.65rem 1rem;color:var(--muted);border-bottom:1px solid var(--border); }
+  .data-table td { padding:.8rem 1rem;font-size:.86rem;border-bottom:1px solid var(--border);vertical-align:middle; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:#fafaf8; }
+  .table-card { background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden; }
+  .table-card:hover { transform:none;box-shadow:none; }
+  .stat-strip { background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:1.2rem; }
+  .stat-strip:hover { transform:none; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-title mb-4">Payments & Transactions</div>
+
+<!-- Summary Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-strip card">
+      <div class="text-muted-custom" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;">Total Collected</div>
+      <div class="fw-700 text-accent" style="font-size:1.8rem;">₹{{ "%.0f"|format(total_paid) }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-strip card">
+      <div class="text-muted-custom" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;">Razorpay Transactions</div>
+      <div class="fw-700" style="font-size:1.8rem;">
+        {{ orders|selectattr('razorpay_payment_id')|list|length }}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-strip card">
+      <div class="text-muted-custom" style="font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;">Total Orders</div>
+      <div class="fw-700" style="font-size:1.8rem;">{{ orders|length }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="table-card card">
+  <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom:1px solid var(--border);">
+    <h6 style="font-family:'Playfair Display',serif;margin:0;">All Transactions</h6>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead><tr>
+        <th>Order ID</th><th>Customer</th><th>Amount</th>
+        <th>Method</th><th>Razorpay Payment ID</th><th>Status</th><th>Date</th>
+      </tr></thead>
+      <tbody>
+        {% if orders %}
+          {% for o in orders %}
+          <tr>
+            <td>
+              <a href="{{ url_for('admin.order_detail', order_id=o.order_id) }}"
+                 class="fw-700" style="color:var(--accent);text-decoration:none;">{{ o.order_id }}</a>
+            </td>
+            <td>
+              <div class="fw-500">{{ o.user_name }}</div>
+              <div class="text-muted-custom" style="font-size:.75rem;">{{ o.user_email }}</div>
+            </td>
+            <td class="fw-700">₹{{ "%.0f"|format(o.total_amount) }}</td>
+            <td>
+              {% if o.razorpay_payment_id %}
+                <span class="badge" style="background:#d4edda;color:#155724;border-radius:20px;font-size:.75rem;padding:3px 10px;">
+                  <i class="bi bi-check-circle me-1"></i>Razorpay
+                </span>
+              {% else %}
+                <span class="badge" style="background:#f8f4ef;color:var(--muted);border-radius:20px;font-size:.75rem;padding:3px 10px;">
+                  {{ o.payment_id or 'COD' }}
+                </span>
+              {% endif %}
+            </td>
+            <td style="font-size:.78rem;color:var(--muted);word-break:break-all;max-width:180px;">
+              {{ o.razorpay_payment_id or '—' }}
+            </td>
+            <td><span class="badge-status status-{{ o.status|lower }}">{{ o.status }}</span></td>
+            <td class="text-muted-custom" style="font-size:.78rem;">
+              {{ o.created_at.strftime('%d %b %Y, %I:%M %p') if o.created_at else '—' }}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7" class="text-center py-4 text-muted-custom">No transactions found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+{% block title %}Shopping Cart{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header { background: var(--charcoal); color: white; padding: 2.5rem 0; }
+  .page-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; }
+
+  .cart-item {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    transition: box-shadow .2s, opacity .3s, transform .3s;
+  }
+  .cart-item:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+  .cart-item.removing { opacity: 0; transform: translateX(30px); }
+
+  .cart-img {
+    width: 90px; height: 90px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Quantity control ── */
+  .qty-control {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    user-select: none;
+  }
+  .qty-btn {
+    background: #f8f4ef;
+    border: none;
+    width: 34px; height: 34px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background .15s;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--charcoal);
+    font-weight: 700;
+  }
+  .qty-btn:hover:not(:disabled) { background: var(--accent); color: var(--charcoal); }
+  .qty-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .qty-display {
+    padding: 0 14px;
+    font-weight: 700;
+    font-size: .95rem;
+    min-width: 40px;
+    text-align: center;
+    line-height: 34px;
+  }
+
+  .btn-remove {
+    background: none; border: 1.5px solid #fcc; color: var(--danger);
+    border-radius: 7px; padding: 4px 12px; font-size: .8rem; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-remove:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+  /* ── Order summary ── */
+  .order-summary {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: sticky;
+    top: 100px;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between;
+    padding: .5rem 0; font-size: .9rem;
+  }
+  .summary-row.total {
+    border-top: 2px solid var(--charcoal);
+    margin-top: .5rem; padding-top: 1rem;
+    font-weight: 700; font-size: 1.15rem;
+  }
+
+  .free-shipping-bar {
+    background: linear-gradient(90deg, #d4edda, #c3e6cb);
+    border-radius: 8px; padding: .6rem 1rem;
+    font-size: .82rem; color: #155724; font-weight: 500;
+  }
+  .need-shipping-bar {
+    background: linear-gradient(90deg, #fff3cd, #ffeeba);
+    border-radius: 8px; padding: .6rem 1rem;
+    font-size: .82rem; color: #856404; font-weight: 500;
+  }
+
+  .empty-cart { text-align: center; padding: 5rem 0; }
+  .empty-cart i { font-size: 5rem; color: var(--border); display: block; margin-bottom: 1rem; }
+
+  .btn-checkout {
+    background: var(--charcoal); color: #fff; border: none;
+    border-radius: 10px; padding: .85rem 1.5rem;
+    font-size: 1rem; font-weight: 700; width: 100%;
+    transition: background .2s, transform .15s;
+  }
+  .btn-checkout:hover { background: var(--accent2); color: #fff; transform: translateY(-2px); }
+
+  .updating { opacity: .5; pointer-events: none; }
+  .qty-spinner { display: none; }
+  .qty-spinner.show { display: inline-block; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ─── Page Header ─── -->
+<div class="page-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3">
+      <h1 class="mb-0">Shopping Cart</h1>
+      <span id="item-count-badge" class="badge"
+            style="background:var(--accent);color:var(--charcoal);font-size:.9rem;padding:6px 14px;border-radius:20px;">
+        {{ items|length }} item{{ 's' if items|length != 1 }}
+      </span>
+    </div>
+    <nav aria-label="breadcrumb" class="mt-2">
+      <ol class="breadcrumb mb-0" style="--bs-breadcrumb-color:rgba(255,255,255,.6);">
+        <li class="breadcrumb-item"><a href="{{ url_for('products.index') }}" style="color:var(--accent);">Shop</a></li>
+        <li class="breadcrumb-item active text-white">Cart</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="py-4" style="background:var(--cream);">
+  <div class="container">
+
+    {% if items %}
+    <div class="row g-4">
+
+      <!-- ─── Cart Items ─── -->
+      <div class="col-lg-8" id="cart-items-col">
+
+        {% for item in items %}
+        <div class="cart-item" id="cart-row-{{ item.cart_id }}"
+             data-cart-id="{{ item.cart_id }}"
+             data-price="{{ item.effective_price }}"
+             data-stock="{{ item.stock }}">
+
+          <div class="d-flex gap-3 align-items-center">
+            <img src="{{ item.image or 'https://placehold.co/90x90/f5f0ea/c9a96e?text=Img' }}"
+                 alt="{{ item.name }}" class="cart-img">
+
+            <div class="flex-fill">
+              <div class="fw-600" style="font-size:.95rem;">{{ item.name }}</div>
+              <div class="text-muted-custom" style="font-size:.8rem;">
+                {% if item.discount > 0 %}
+                  <span class="text-accent fw-600">₹{{ "%.0f"|format(item.effective_price) }}</span>
+                  <span class="text-decoration-line-through ms-1">₹{{ "%.0f"|format(item.price) }}</span>
+                  <span class="badge ms-1" style="background:#d4edda;color:#155724;font-size:.72rem;">{{ item.discount|int }}% OFF</span>
+                {% else %}
+                  <span class="fw-600">₹{{ "%.0f"|format(item.price) }}</span>
+                {% endif %}
+              </div>
+
+              <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+
+                <!-- Quantity control -->
+                <div class="qty-control">
+                  <button class="qty-btn"
+                          onclick="changeQty({{ item.cart_id }}, -1)"
+                          id="btn-minus-{{ item.cart_id }}">−</button>
+                  <span class="qty-display" id="qty-{{ item.cart_id }}">{{ item.quantity }}</span>
+                  <button class="qty-btn"
+                          onclick="changeQty({{ item.cart_id }}, 1)"
+                          id="btn-plus-{{ item.cart_id }}"
+                          {% if item.quantity >= item.stock %}disabled{% endif %}>+</button>
+                </div>
+
+                <!-- Row subtotal -->
+                <span class="fw-700 text-accent" id="row-total-{{ item.cart_id }}" style="font-size:1rem;">
+                  ₹{{ "%.0f"|format(item.effective_price * item.quantity) }}
+                </span>
+
+                <!-- Stock notice -->
+                <small class="text-muted-custom" id="stock-note-{{ item.cart_id }}"
+                       style="font-size:.76rem;">
+                  {% if item.stock <= 5 %}
+                    Only {{ item.stock }} left
+                  {% endif %}
+                </small>
+
+                <button class="btn-remove ms-auto"
+                        onclick="removeItem({{ item.cart_id }})">
+                  <i class="bi bi-trash me-1"></i>Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+        <div class="mt-3">
+          <a href="{{ url_for('products.index') }}" class="btn btn-outline-accent">
+            <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+          </a>
+        </div>
+      </div>
+
+      <!-- ─── Order Summary ─── -->
+      <div class="col-lg-4">
+        <div class="order-summary card">
+          <h5 class="mb-4" style="font-family:'Playfair Display',serif;">Order Summary</h5>
+
+          <!-- Shipping banner -->
+          <div id="shipping-banner" class="mb-3">
+            {% if shipping == 0 %}
+            <div class="free-shipping-bar">
+              <i class="bi bi-truck me-2"></i>You qualify for <strong>FREE shipping!</strong>
+            </div>
+            {% else %}
+            <div class="need-shipping-bar">
+              <i class="bi bi-truck me-2"></i>Add
+              <strong id="remaining-for-free">₹{{ "%.0f"|format(999 - subtotal) }}</strong>
+              more for free shipping
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="summary-row">
+            <span>Subtotal (<span id="summary-count">{{ items|length }}</span> items)</span>
+            <span id="summary-subtotal">₹{{ "%.0f"|format(subtotal) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span id="summary-shipping">
+              {% if shipping == 0 %}
+                <span class="text-success fw-600">FREE</span>
+              {% else %}
+                ₹{{ shipping }}
+              {% endif %}
+            </span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span id="summary-total">₹{{ "%.0f"|format(total) }}</span>
+          </div>
+
+          <a href="{{ url_for('payment.checkout') }}" class="btn-checkout d-block text-center text-decoration-none mt-4">
+            <i class="bi bi-lock-fill me-2"></i>Proceed to Checkout
+          </a>
+
+          <div class="text-center mt-3" style="font-size:.75rem;color:var(--muted);">
+            <i class="bi bi-shield-check me-1 text-success"></i>
+            Secure &amp; encrypted checkout
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    {% else %}
+    <!-- ─── Empty Cart ─── -->
+    <div class="empty-cart" id="empty-cart-msg" style="display:none;">
+      <i class="bi bi-cart-x"></i>
+      <h3 style="font-family:'Playfair Display',serif;">Your cart is empty</h3>
+      <p class="text-muted-custom">Looks like you haven't added anything yet.</p>
+      <a href="{{ url_for('products.index') }}" class="btn btn-accent px-5 mt-2"
+         style="border-radius:10px;padding:.8rem 2rem;">
+        Start Shopping
+      </a>
+    </div>
+    <div class="empty-cart" id="initial-empty">
+      <i class="bi bi-cart-x"></i>
+      <h3 style="font-family:'Playfair Display',serif;">Your cart is empty</h3>
+      <p class="text-muted-custom">Looks like you haven't added anything yet.</p>
+      <a href="{{ url_for('products.index') }}" class="btn btn-accent px-5 mt-2"
+         style="border-radius:10px;padding:.8rem 2rem;">
+        Start Shopping
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Map cart_id → { price, stock }
+  const ITEM_DATA = {
+    {% for item in items %}
+    {{ item.cart_id }}: { price: {{ item.effective_price }}, stock: {{ item.stock }}, qty: {{ item.quantity }} },
+    {% endfor %}
+  };
+
+  // ── Update summary panel ────────────────────────────────
+  function updateSummary(subtotal, shipping, total, count) {
+    document.getElementById('summary-subtotal').textContent = '₹' + Math.round(subtotal);
+    document.getElementById('summary-total').textContent    = '₹' + Math.round(total);
+    document.getElementById('summary-count').textContent    = count;
+
+    // Shipping display
+    const shippingEl = document.getElementById('summary-shipping');
+    if (shipping === 0) {
+      shippingEl.innerHTML = '<span class="text-success fw-600">FREE</span>';
+    } else {
+      shippingEl.textContent = '₹' + shipping;
+    }
+
+    // Shipping banner
+    const banner = document.getElementById('shipping-banner');
+    if (shipping === 0) {
+      banner.innerHTML = `<div class="free-shipping-bar">
+        <i class="bi bi-truck me-2"></i>You qualify for <strong>FREE shipping!</strong></div>`;
+    } else {
+      const remaining = Math.max(0, 999 - subtotal);
+      banner.innerHTML = `<div class="need-shipping-bar">
+        <i class="bi bi-truck me-2"></i>Add <strong>₹${Math.round(remaining)}</strong> more for free shipping</div>`;
+    }
+
+    // Item count badge in header
+    const badge = document.getElementById('item-count-badge');
+    if (badge) badge.textContent = count + ' item' + (count !== 1 ? 's' : '');
+
+    // If cart becomes empty, show empty state
+    if (count === 0) {
+      const col = document.getElementById('cart-items-col');
+      const summaryCol = col?.closest('.row');
+      if (summaryCol) {
+        summaryCol.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <i class="bi bi-cart-x d-block mb-3" style="font-size:5rem;color:var(--border);"></i>
+            <h3 style="font-family:'Playfair Display',serif;">Your cart is empty</h3>
+            <p class="text-muted-custom">Looks like you haven't added anything yet.</p>
+            <a href="{{ url_for('products.index') }}" class="btn btn-accent px-5 mt-2"
+               style="border-radius:10px;padding:.8rem 2rem;">Start Shopping</a>
+          </div>`;
+      }
+    }
+  }
+
+  // ── Change quantity (+1 / -1) ───────────────────────────
+  async function changeQty(cartId, delta) {
+    const data    = ITEM_DATA[cartId];
+    if (!data) return;
+    const current = data.qty;
+    const newQty  = current + delta;
+
+    if (newQty < 1) {
+      if (!confirm('Remove this item from cart?')) return;
+      await removeItem(cartId);
+      return;
+    }
+    if (newQty > data.stock) return;   // already disabled via button attr
+
+    await setQty(cartId, newQty);
+  }
+
+  // ── Set absolute quantity ───────────────────────────────
+  async function setQty(cartId, newQty) {
+    const row = document.getElementById(`cart-row-${cartId}`);
+    row.classList.add('updating');
+
+    const res  = await fetch('/cart/update', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ cart_id: cartId, quantity: newQty })
+    });
+    const json = await res.json();
+    row.classList.remove('updating');
+
+    if (!res.ok) {
+      alert(json.error || 'Could not update quantity.');
+      return;
+    }
+
+    if (json.removed) {
+      animateRemove(cartId, json);
+      return;
+    }
+
+    // Update row display
+    ITEM_DATA[cartId].qty = newQty;
+    document.getElementById(`qty-${cartId}`).textContent       = newQty;
+    document.getElementById(`row-total-${cartId}`).textContent = '₹' + Math.round(json.row_total);
+
+    // Enable/disable + button
+    const plusBtn  = document.getElementById(`btn-plus-${cartId}`);
+    const minusBtn = document.getElementById(`btn-minus-${cartId}`);
+    if (plusBtn)  plusBtn.disabled  = (newQty >= ITEM_DATA[cartId].stock);
+    if (minusBtn) minusBtn.disabled = false;
+
+    // Stock note
+    const note = document.getElementById(`stock-note-${cartId}`);
+    if (note) {
+      note.textContent = (ITEM_DATA[cartId].stock <= 5)
+        ? `Only ${ITEM_DATA[cartId].stock} left`
+        : '';
+    }
+
+    updateSummary(json.subtotal, json.shipping, json.total, json.cart_count);
+  }
+
+  // ── Remove item ─────────────────────────────────────────
+  async function removeItem(cartId) {
+    const res  = await fetch('/cart/remove', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ cart_id: cartId })
+    });
+    const json = await res.json();
+
+    if (res.ok) {
+      animateRemove(cartId, json);
+    }
+  }
+
+  function animateRemove(cartId, summaryData) {
+    const row = document.getElementById(`cart-row-${cartId}`);
+    if (row) {
+      row.classList.add('removing');
+      setTimeout(() => {
+        row.remove();
+        delete ITEM_DATA[cartId];
+        updateSummary(
+          summaryData.subtotal,
+          summaryData.shipping,
+          summaryData.total,
+          summaryData.cart_count
+        );
+      }, 300);
+    }
+  }
+</script>
+{% endblock %}

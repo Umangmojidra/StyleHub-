@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f4ef 0%, #efe8de 100%);
+  }
+  .auth-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.12);
+    max-width: 440px;
+    width: 100%;
+  }
+  .auth-card:hover { transform: none; }
+  .auth-panel {
+    background: var(--charcoal);
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+  }
+  .auth-panel .brand-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+  }
+  .auth-form { padding: 2.5rem; background: #fff; }
+  .divider-text {
+    position: relative;
+    text-align: center;
+    color: var(--muted);
+    font-size: .82rem;
+  }
+  .divider-text::before, .divider-text::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 42%;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider-text::before { left: 0; }
+  .divider-text::after  { right: 0; }
+
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap .bi {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: .95rem;
+  }
+  .input-icon-wrap .form-control { padding-left: 2.2rem; }
+
+  .btn-login {
+    background: var(--accent);
+    color: var(--charcoal);
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: .75rem;
+    font-size: 1rem;
+    letter-spacing: .5px;
+    transition: background .2s, transform .15s;
+    width: 100%;
+  }
+  .btn-login:hover { background: var(--accent2); color: #fff; transform: translateY(-2px); }
+
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--muted);
+    z-index: 10;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+
+        <div class="auth-card card">
+          <!-- Top accent strip -->
+          <div style="height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+
+          <div class="auth-form">
+            <div class="text-center mb-4">
+              <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--charcoal);font-weight:700;">
+                Welcome Back
+              </div>
+              <p class="text-muted-custom mb-0" style="font-size:.88rem;">Sign in to your StyleHub account</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+              <div class="mb-3">
+                <label class="form-label">Email Address</label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-envelope"></i>
+                  <input type="email" name="email" class="form-control"
+                         placeholder="you@example.com"
+                         value="{{ email or '' }}" required autocomplete="email">
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">Password</label>
+                <div class="input-icon-wrap position-relative">
+                  <i class="bi bi-lock"></i>
+                  <input type="password" name="password" id="password" class="form-control"
+                         placeholder="Enter your password" required autocomplete="current-password">
+                  <i class="bi bi-eye password-toggle" onclick="togglePassword()"></i>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-login">Sign In</button>
+            </form>
+
+            <div class="divider-text my-4">or</div>
+
+            <p class="text-center mb-0" style="font-size:.88rem;">
+              Don't have an account?
+              <a href="{{ url_for('auth.register') }}" class="text-accent fw-600">Create one</a>
+            </p>
+          </div>
+        </div>
+
+        <p class="text-center mt-3 text-muted-custom" style="font-size:.8rem;">
+          Admin demo: <code>admin@shop.com</code> / <code>Admin@123</code>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function togglePassword() {
+    const pwd = document.getElementById('password');
+    const icon = document.querySelector('.password-toggle');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'bi bi-eye-slash password-toggle';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'bi bi-eye password-toggle';
+    }
+  }
+</script>
+{% endblock %}

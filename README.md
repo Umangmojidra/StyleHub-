@@ -1,231 +1,294 @@
-<div align="center">
+# 🛍️ StyleHub — Full-Stack E-Commerce Platform
 
-# 🛡️ CreditGuard
-### Retail Lending Risk Intelligence System
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Flask-3.0.0-000000?style=for-the-badge&logo=flask&logoColor=white"/>
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Razorpay-Payment%20Gateway-02042B?style=for-the-badge&logo=razorpay&logoColor=white"/>
+  <img src="https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white"/>
+</p>
 
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Pandas](https://img.shields.io/badge/Pandas-2.x-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org)
-[![Matplotlib](https://img.shields.io/badge/Matplotlib-3.x-11557C?style=for-the-badge&logo=matplotlib&logoColor=white)](https://matplotlib.org)
-[![SQL](https://img.shields.io/badge/SQL-Analytics-CC2927?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Status](https://img.shields.io/badge/Status-Complete-2ea44f?style=for-the-badge)](/)
-
-> **End-to-end credit risk analytics pipeline** that transforms raw retail lending data into actionable risk intelligence — identifying default drivers, segmenting borrowers, and delivering data-backed policy recommendations that directly reduce Non-Performing Assets (NPAs).
-
-</div>
-
----
-
-## 📌 Business Problem
-
-**GM Bank**, a mid-sized retail lending institution, experienced a surge in loan defaults following rapid portfolio expansion across personal loans, home loans, auto loans, and credit cards. Rising NPAs threatened portfolio health and regulatory standing.
-
-**The challenge:** identify *which borrowers default, why they default, and when* — before it's too late.
+<p align="center">
+  <strong>A production-grade e-commerce web application with secure authentication, full cart & order management, Razorpay payment integration, and a feature-rich admin dashboard — built on Flask, MySQL, and JWT.</strong>
+</p>
 
 ---
 
-## 🎯 Objectives
+## 📌 Project Overview
 
-| # | Objective |
-|---|-----------|
-| 1 | Identify the key drivers influencing loan default |
-| 2 | Segment customers by credit risk level (Low / Medium / High) |
-| 3 | Detect repayment delinquency patterns and early warning signals |
-| 4 | Evaluate risk exposure by product type and geographic region |
-| 5 | Deliver actionable policy recommendations to reduce NPAs |
+**StyleHub** is a complete retail e-commerce platform designed to handle real-world shopping workflows — from OTP-verified registration to Razorpay checkout to admin-level order and inventory management. Built with a clean Blueprint-based architecture, it demonstrates full-stack web development with secure backend practices.
 
 ---
 
-## 📊 Dataset
+## ✨ Feature Highlights
 
-| Attribute | Detail |
-|-----------|--------|
-| **Records** | 1,500+ retail loan entries |
-| **Source** | `RetailLendingRiskIntelligence.csv` |
-| **Scope** | Historical loan data across all GM Bank retail products |
-
-**Features analyzed:**
-
-`customer_age` · `monthly_income` · `employment_type` · `credit_score` · `loan_amount` · `loan_tenure` · `emi_amount` · `emi_delay_days` · `loan_type` · `loan_status` · `region`
+| Module | Features |
+|---|---|
+| 🔐 **Auth** | Register, Login, Logout, OTP Verification, JWT Session, Role-based Access |
+| 🛒 **Cart** | Add / Update / Remove items, Live subtotal & shipping recalculation |
+| 📦 **Orders** | Place orders, Order history, Order detail view, COD + Razorpay support |
+| 💳 **Payments** | Razorpay order creation, HMAC signature verification, Payment success flow |
+| 🏪 **Products** | Listing with search, category filter, sort; Product detail with related items |
+| 🛠️ **Admin Panel** | Dashboard KPIs, Product CRUD, Order management, User management, Sales analytics |
 
 ---
 
 ## 🏗️ Project Architecture
 
 ```
-CreditGuard/
+StyleHub/
 │
-├── 📂 data/
-│   ├── raw/                          # Source dataset (RetailLendingRiskIntelligence.csv)
-│   └── processed/                    # Cleaned, analysis-ready data (clean_loans.csv)
+├── app.py                        # Application entry point — Flask factory & blueprint registration
+├── config.py                     # Centralised config loaded from environment variables
+├── schema.sql                    # Full DB schema with auto-ID triggers (USR, CAT, PROD, ORD)
+├── migration.sql                 # Database migration scripts
+├── requirements.txt              # Python dependencies
+├── .env.example                  # Environment variable template
 │
-├── 📂 src/
-│   ├── load_data.py                  # Data ingestion & schema validation
-│   ├── data_cleaning.py              # Missing value detection, deduplication, outlier IQR
-│   ├── data_quality.py               # Pre-analysis data integrity checks
-│   ├── eda_analysis.py               # Core risk analysis functions
-│   ├── feature_engineering.py        # Derived feature construction
-│   ├── visualization.py              # Chart generation (Matplotlib)
-│   └── run_analysis.py               # Orchestration entrypoint
+├── routes/                       # Blueprint modules (one per domain)
+│   ├── auth_routes.py            # Register, Login, OTP, Profile, Logout
+│   ├── product_routes.py         # Product listing, detail, search, filter, sort
+│   ├── cart_routes.py            # Add, update, remove, view cart
+│   ├── order_routes.py           # Place order, order history, order detail
+│   ├── payment_routes.py         # Razorpay order creation & signature verification
+│   └── admin_routes.py           # Admin dashboard, product CRUD, order & user management
 │
-├── 📂 sql/
-│   └── queries.sql                   # SQL-based risk queries
+├── utils/
+│   ├── auth.py                   # JWT helpers: create_token, decode_token, @login_required, @admin_required
+│   ├── db.py                     # PyMySQL helper: query_db(), get_connection()
+│   └── otp.py                    # OTP generation utility
 │
-├── 📂 reports/
-│   └── credit_risk_analysis_report.md  # Full narrative findings & recommendations
-│
-├── 📂 visuals/
-│   ├── loan_type_default.png           # Default rate by product type
-│   ├── credit_score_default.png        # Credit score vs. default correlation
-│   ├── emi_delay_distribution.png      # EMI delay histogram
-│   └── region_default.png             # Geographic default distribution
-│
-└── README.md
+└── templates/                    # Jinja2 HTML templates
+    ├── base.html                 # Base layout
+    ├── products.html / product_detail.html
+    ├── cart.html / checkout.html
+    ├── orders.html / order_detail.html
+    ├── login.html / register.html / verify_otp.html
+    ├── dashboard.html / profile.html / addresses.html
+    ├── payment_success.html
+    ├── 404.html / 500.html
+    └── admin/                    # Admin panel templates
+        ├── dashboard.html
+        ├── products.html / edit_product.html
+        ├── orders.html / order_detail.html
+        ├── users.html
+        ├── payments.html
+        └── base_admin.html
 ```
 
 ---
 
-## ⚙️ Analytical Pipeline
+## 🗄️ Database Schema
+
+**Auto-ID system** using MySQL triggers generates human-readable IDs:
+
+| Table | Auto ID Format | Example |
+|---|---|---|
+| `users` | `USR00001` | USR00042 |
+| `categories` | `CAT001` | CAT007 |
+| `products` | `PROD0001` | PROD0128 |
+| `orders` | `ORD00001` | ORD00391 |
+
+**Core tables:** `users` · `categories` · `products` · `cart` · `orders` · `order_items` · `addresses` · `otp_verification`
+
+---
+
+## 🔐 Security Architecture
 
 ```
-Raw CSV → Load & Validate → Clean & QA → EDA → Feature Engineering → Visualize → Insights
+┌─────────────────────────────────────────────────────────────┐
+│                    SECURITY LAYERS                          │
+├─────────────────────────┬───────────────────────────────────┤
+│  🔑 Authentication       │  JWT (HS256) with 24hr expiry     │
+│                         │  Stored in server-side session     │
+├─────────────────────────┼───────────────────────────────────┤
+│  🔒 Password Hashing     │  Flask-Bcrypt (bcrypt algorithm)  │
+├─────────────────────────┼───────────────────────────────────┤
+│  📱 OTP Verification     │  6-digit OTP on registration      │
+├─────────────────────────┼───────────────────────────────────┤
+│  💳 Payment Security     │  Razorpay HMAC-SHA256 signature   │
+│                         │  verification on every payment     │
+├─────────────────────────┼───────────────────────────────────┤
+│  🛡️ Access Control       │  @login_required decorator         │
+│                         │  @admin_required decorator         │
+├─────────────────────────┼───────────────────────────────────┤
+│  🌿 Env Isolation        │  All secrets via .env + dotenv    │
+└─────────────────────────┴───────────────────────────────────┘
 ```
 
-### Stage 1 — Data Quality Validation
-- Null detection across `monthly_income` and `credit_score` fields
-- Duplicate identification by `loan_id` and `customer_id`
-- IQR-based outlier flagging on `loan_amount`
+---
 
-### Stage 2 — Exploratory Data Analysis (EDA)
-- **Default rate computation** — portfolio-level and segment-level
-- **Income bracket segmentation** — Low / Lower-Middle / Upper-Middle / High Income
-- **Age cohort analysis** — 18–30, 31–40, 41–50, 51–60, 60+
-- **Employment type risk scoring** — salaried vs. self-employed vs. other
-- **Credit score bucketing** — Low (300–600) / Medium (600–750) / High (750–900)
+## 💳 Payment Flow — Razorpay Integration
 
-### Stage 3 — Risk Profiling & Segmentation
-- Cross-tabulation of loan status against all key dimensions
-- Default rate calculation per segment
-- Three-tier risk classification: **Low · Medium · High**
-
-### Stage 4 — Visualization
-Four production-ready charts generated programmatically via Matplotlib:
-
-| Chart | Insight |
-|-------|---------|
-| Default Rate by Loan Type | Product-level risk exposure |
-| Credit Score vs. Default | Score band default probability |
-| EMI Delay Distribution | Delinquency frequency patterns |
-| Region-wise Default | Geographic concentration risk |
+```
+User clicks "Pay"
+      │
+      ▼
+POST /payment/create-order
+  → Validates cart & address
+  → Creates Razorpay order (INR, paise)
+  → Returns { razorpay_order_id, amount, key }
+      │
+      ▼
+Razorpay Checkout (client-side)
+  → User completes payment
+  → Returns { payment_id, order_id, signature }
+      │
+      ▼
+POST /payment/verify
+  → HMAC-SHA256 signature verification
+  → On success → place order + clear cart
+  → Redirect → /payment/success
+```
 
 ---
 
-## 🔍 Key Findings
+## 🛠️ Admin Dashboard
 
-### 💳 Loan Default Assessment
-- **Personal loans and credit cards** exhibit the highest default rates across the portfolio
-- Default probability is significantly elevated in **lower income brackets**
-- Unsecured loan products carry structurally higher risk than secured counterparts
+The `/admin` panel provides full operational control:
 
-### 👤 Customer Risk Profiling
-- **Low credit score borrowers (300–600)** are the primary NPA contributors
-- **Unstable employment types** correlate with elevated repayment failure
-- Risk segmentation enables targeted intervention at each borrower tier
-
-### 📅 Repayment & Delinquency Signals
-- **Frequent EMI delays** are the strongest leading indicator of eventual default
-- Long-tenure loans demonstrate compounding delinquency risk over time
-- Borrowers with **multiple active loans** show measurable repayment stress
-
-### 🗺️ Regional & Product Risk
-- Geographic default concentration identified in specific high-risk regions
-- Unsecured product lines consistently underperform secured counterparts in repayment
+- **KPI Cards** — Total orders, users, products, revenue at a glance
+- **Sales Analytics** — Daily revenue (last 7 days), monthly trend (last 6 months)
+- **Top Products** — Best-sellers ranked by units sold & revenue
+- **Low Stock Alerts** — Products with stock < 5 flagged automatically
+- **Order Management** — View, filter, and update order status (Pending → Shipped → Delivered)
+- **Product CRUD** — Add, edit, delete products with category assignment
+- **User Management** — View all users, block/unblock accounts
+- **Payment Logs** — Full payment transaction history
 
 ---
 
-## 💡 Business Recommendations
-
-| Priority | Recommendation |
-|----------|----------------|
-| 🔴 High | Tighten credit approval criteria for sub-600 credit score applicants |
-| 🔴 High | Implement EMI affordability caps as a percentage of verified monthly income |
-| 🟠 Medium | Deploy early warning dashboards triggered by consecutive EMI delays |
-| 🟠 Medium | Increase monitoring frequency for flagged high-risk regions |
-| 🟡 Standard | Revise pricing and approval thresholds for unsecured loan products |
-
----
-
-## 🚀 Getting Started
+## ⚙️ Getting Started
 
 ### Prerequisites
-```bash
-Python >= 3.8
+
+```
+Python 3.12+
+MySQL 8.0+
+Razorpay account (test keys for development)
 ```
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/Umangmojidra/creditguard.git
-cd creditguard
+### 1. Clone & Install
 
-# Install dependencies
-pip install pandas numpy matplotlib
+```bash
+git clone https://github.com/Umangmojidra/stylehub.git
+cd stylehub
+
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
 ```
 
-### Run the Analysis
+### 2. Configure Environment
+
 ```bash
-# Run full pipeline
-python src/run_analysis.py
+cp .env.example .env
 ```
 
-Outputs will be saved to `visuals/` and findings documented in `reports/credit_risk_analysis_report.md`.
+Edit `.env` with your credentials:
+
+```env
+SECRET_KEY=your-super-secret-key
+JWT_SECRET=your-jwt-secret
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=ecommerce_db
+
+RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXXXXXXXX
+RAZORPAY_KEY_SECRET=XXXXXXXXXXXXXXXXXXXXXXXX
+
+DEBUG=True
+```
+
+### 3. Set Up the Database
+
+```bash
+mysql -u root -p < schema.sql
+```
+
+### 4. Run the Application
+
+```bash
+python app.py
+```
+
+Visit: **http://localhost:5000**
 
 ---
 
-## 🛠️ Tech Stack
+## 🧰 Tech Stack
 
-| Tool | Purpose |
-|------|---------|
-| **Python 3.12** | Core analysis language |
-| **Pandas** | Data manipulation, cross-tabulation, segmentation |
-| **NumPy** | Statistical computations, IQR outlier detection |
-| **Matplotlib** | Chart generation and visualization |
-| **SQL** | Supplementary analytical queries |
-
----
-
-## 📈 Skills Demonstrated
-
-- ✅ End-to-end data analytics pipeline design
-- ✅ Financial domain knowledge (credit risk, NPA, delinquency, EMI)
-- ✅ Data quality validation and anomaly detection
-- ✅ Multi-dimensional customer segmentation
-- ✅ Insight-to-recommendation translation for business stakeholders
-- ✅ Modular, production-style Python code organization
-- ✅ Data visualization with business storytelling
+| Layer | Technology |
+|---|---|
+| **Backend Framework** | Flask 3.0.0 |
+| **Database** | MySQL 8.0 via PyMySQL 1.1.0 |
+| **Authentication** | PyJWT 2.8.0 + Flask-Bcrypt 1.0.1 |
+| **Payment Gateway** | Razorpay SDK 1.4.1 |
+| **Templating** | Jinja2 (Flask built-in) |
+| **Environment Management** | python-dotenv 1.0.0 |
+| **Password Security** | Werkzeug 3.0.1 + bcrypt |
 
 ---
 
-## 📄 Full Report
+## 📦 API Routes Reference
 
-The complete analysis with all findings, methodology, and recommendations is available in:
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| GET/POST | `/register` | Public | User registration + OTP trigger |
+| GET/POST | `/verify-otp` | Session | OTP verification & account creation |
+| GET/POST | `/login` | Public | Login + JWT issuance |
+| GET | `/logout` | Login | Clear session |
+| GET | `/` | Public | Product listing (search, filter, sort) |
+| GET | `/product/<id>` | Public | Product detail + related items |
+| GET | `/cart` | Login | View cart |
+| POST | `/cart/add` | Login | Add item to cart |
+| GET | `/checkout` | Login | Checkout with address selection |
+| POST | `/payment/create-order` | Login | Create Razorpay order |
+| POST | `/payment/verify` | Login | Verify payment + place order |
+| GET | `/orders` | Login | Order history |
+| GET | `/orders/<id>` | Login | Order detail |
+| GET | `/admin/` | Admin | Admin dashboard |
+| GET/POST | `/admin/products` | Admin | Product management |
+| GET | `/admin/orders` | Admin | Order management |
+| GET | `/admin/users` | Admin | User management |
 
-📋 [`reports/credit_risk_analysis_report.md`](reports/credit_risk_analysis_report.md)
+---
+
+## 🗂️ Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `SECRET_KEY` | Flask session secret | — |
+| `JWT_SECRET` | JWT signing key | — |
+| `DB_HOST` | MySQL host | `localhost` |
+| `DB_PORT` | MySQL port | `3306` |
+| `DB_USER` | MySQL username | `root` |
+| `DB_PASSWORD` | MySQL password | — |
+| `DB_NAME` | Database name | `ecommerce_db` |
+| `RAZORPAY_KEY_ID` | Razorpay public key | — |
+| `RAZORPAY_KEY_SECRET` | Razorpay secret key | — |
+| `DEBUG` | Flask debug mode | `True` |
 
 ---
 
 ## 👤 Author
 
-** Umang Mojidra **
-Data Analyst | Risk Analytics | Financial Intelligence
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://linkedin.com/in/umangmojidra)
-[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat&logo=github)](https://github.com/Umangmojidra)
-[![Email](https://img.shields.io/badge/Email-Contact-D14836?style=flat&logo=gmail)](mailto:mojidraumang345@email.com)
+**Umang Mojidra**  
+Full-Stack Developer | Python · Flask · MySQL  
+[LinkedIn](https://linkedin.com/in/umangmojidra) • [GitHub](https://github.com/Umangmojidra) 
 
 ---
 
-<div align="center">
+## 📄 License
 
-*Built to turn raw lending data into risk intelligence that protects portfolio health.*
+This project is licensed under the [MIT License](LICENSE).
 
-</div>
+---
+
+<p align="center">
+  <i>Built to demonstrate end-to-end full-stack web development with secure authentication, payment integration, and admin operations.</i>
+</p>

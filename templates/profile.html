@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-header {
+    background: linear-gradient(135deg, var(--charcoal) 0%, #2d2320 100%);
+    color: white;
+    padding: 3rem 0 2rem;
+  }
+  .avatar-circle {
+    width: 90px; height: 90px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--charcoal);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .info-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.8rem;
+  }
+  .info-card:hover { transform: none; box-shadow: none; }
+  .info-row {
+    display: flex;
+    align-items: center;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    min-width: 130px;
+  }
+  .info-value { font-weight: 500; }
+  .badge-role {
+    background: var(--accent);
+    color: var(--charcoal);
+    font-size: .75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="profile-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-4">
+      <div class="avatar-circle">
+        {{ user.name[0].upper() if user and user.name else '?' }}
+      </div>
+      <div>
+        <h2 class="mb-1" style="font-family:'Playfair Display',serif;">{{ user.name }}</h2>
+        <p class="mb-1 text-muted-custom" style="color:#aaa;font-size:.9rem;">{{ user.email }}</p>
+        <span class="badge-role">{{ user.role | capitalize }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Details -->
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Personal Info -->
+    <div class="col-lg-6">
+      <div class="info-card">
+        <h5 class="mb-3" style="font-family:'Playfair Display',serif;">
+          <i class="bi bi-person-circle me-2" style="color:var(--accent);"></i>Personal Information
+        </h5>
+
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value">{{ user.name }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value">{{ user.email }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Phone</span>
+          <span class="info-value">{{ user.phone or '—' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Account Type</span>
+          <span class="info-value"><span class="badge-role">{{ user.role }}</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Member Since</span>
+          <span class="info-value">{{ user.created_at.strftime('%d %b %Y') if user.created_at else '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="col-lg-6">
+      <div class="info-card">
+        <h5 class="mb-3" style="font-family:'Playfair Display',serif;">
+          <i class="bi bi-lightning me-2" style="color:var(--accent);"></i>Quick Actions
+        </h5>
+
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('orders.view_orders') }}"
+             class="btn btn-outline-dark d-flex align-items-center gap-2">
+            <i class="bi bi-bag-check"></i> My Orders
+          </a>
+          <a href="{{ url_for('cart.view_cart') }}"
+             class="btn btn-outline-dark d-flex align-items-center gap-2">
+            <i class="bi bi-cart3"></i> View Cart
+          </a>
+          <a href="{{ url_for('payment.list_addresses') }}"
+             class="btn btn-outline-dark d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt"></i> Manage Addresses
+          </a>
+          {% if user.role == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}"
+             class="btn d-flex align-items-center gap-2"
+             style="background:var(--accent);color:var(--charcoal);font-weight:600;">
+            <i class="bi bi-shield-check"></i> Admin Dashboard
+          </a>
+          {% endif %}
+          <a href="{{ url_for('auth.logout') }}"
+             class="btn btn-outline-danger d-flex align-items-center gap-2">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

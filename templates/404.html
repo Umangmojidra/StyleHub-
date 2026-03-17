@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found{% endblock %}
+{% block content %}
+<div style="min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:3rem;">
+  <div>
+    <div style="font-family:'Playfair Display',serif;font-size:8rem;font-weight:700;color:var(--border);line-height:1;">404</div>
+    <h2 style="font-family:'Playfair Display',serif;margin-top:-1rem;">Page Not Found</h2>
+    <p class="text-muted-custom">The page you're looking for doesn't exist or has been moved.</p>
+    <a href="{{ url_for('products.index') }}" class="btn btn-accent px-5 mt-3" style="border-radius:10px;padding:.8rem 2rem;">
+      <i class="bi bi-house me-2"></i>Go Home
+    </a>
+  </div>
+</div>
+{% endblock %}

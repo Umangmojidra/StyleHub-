@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dashboard-header {
+    background: linear-gradient(135deg, var(--charcoal) 0%, #2d2320 100%);
+    color: white;
+    padding: 2.5rem 0;
+  }
+  .dashboard-header h1 { font-family: 'Playfair Display', serif; font-size: 1.9rem; }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: box-shadow .25s, transform .25s;
+  }
+  .stat-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.1); transform: translateY(-3px); }
+
+  .stat-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--charcoal); line-height: 1; }
+  .stat-label { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+
+  .orders-table { width: 100%; }
+  .orders-table th {
+    background: #f8f4ef;
+    font-size: .8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: .75rem 1rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .orders-table td { padding: .85rem 1rem; font-size: .88rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .orders-table tr:last-child td { border-bottom: none; }
+  .orders-table tr:hover td { background: #fafaf8; }
+
+  .profile-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+  .profile-card:hover { transform: none; }
+  .avatar {
+    width: 70px; height: 70px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--charcoal);
+    font-family: 'Playfair Display', serif;
+    margin: 0 auto 1rem;
+  }
+  .profile-info dt { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .profile-info dd { font-size: .9rem; font-weight: 500; margin-bottom: .75rem; }
+
+  .section-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .section-card:hover { transform: none; box-shadow: none; }
+  .section-card-header {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-card-header h5 { font-family: 'Playfair Display', serif; margin: 0; font-size: 1.1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ─── Header ─── -->
+<div class="dashboard-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div class="avatar" style="width:55px;height:55px;font-size:1.5rem;">
+        {{ user.name[0].upper() }}
+      </div>
+      <div>
+        <h1 class="mb-0">Welcome, {{ user.name.split()[0] }}!</h1>
+        <p class="mb-0" style="color:rgba(255,255,255,.6);font-size:.88rem;">
+          Member since {{ user.created_at.strftime('%B %Y') if user.created_at else 'Recently' }}
+          {% if user.role == 'admin' %} · <span style="color:var(--accent);">Admin</span>{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="py-4" style="background:var(--cream);">
+  <div class="container">
+
+    <!-- ─── Stats Row ─── -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fff3cd;">
+            <i class="bi bi-bag-check" style="color:#856404;"></i>
+          </div>
+          <div>
+            <div class="stat-value">{{ order_count }}</div>
+            <div class="stat-label">Total Orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d4edda;">
+            <i class="bi bi-cart3" style="color:#155724;"></i>
+          </div>
+          <div>
+            <div class="stat-value">{{ cart_count }}</div>
+            <div class="stat-label">Items in Cart</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="{{ url_for('products.index') }}" style="text-decoration:none;">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#cce5ff;">
+              <i class="bi bi-grid" style="color:#004085;"></i>
+            </div>
+            <div>
+              <div class="stat-value" style="font-size:1rem;padding-top:.3rem;">Shop</div>
+              <div class="stat-label">Browse Products</div>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="{{ url_for('cart.view_cart') }}" style="text-decoration:none;">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#f8d7da;">
+              <i class="bi bi-cart-check" style="color:#721c24;"></i>
+            </div>
+            <div>
+              <div class="stat-value" style="font-size:1rem;padding-top:.3rem;">Cart</div>
+              <div class="stat-label">View My Cart</div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ─── Recent Orders ─── -->
+      <div class="col-lg-8">
+        <div class="section-card card">
+          <div class="section-card-header">
+            <h5><i class="bi bi-clock-history me-2 text-accent"></i>Recent Orders</h5>
+            <a href="{{ url_for('orders.view_orders') }}" class="btn btn-sm btn-outline-accent">View All</a>
+          </div>
+
+          {% if recent_orders %}
+          <div class="table-responsive">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                  <td><span class="fw-600">#{{ order.id }}</span></td>
+                  <td>₹{{ "%.0f"|format(order.total_amount) }}</td>
+                  <td>
+                    <span class="badge-status status-{{ order.status|lower }}">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td class="text-muted-custom">
+                    {{ order.created_at.strftime('%d %b %Y') if order.created_at else '—' }}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('orders.order_detail', order_id=order.order_id) }}"
+                       class="btn btn-sm" style="font-size:.75rem;color:var(--accent);font-weight:600;">
+                      View →
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted-custom">
+            <i class="bi bi-bag d-block mb-2 fs-3" style="color:var(--border);"></i>
+            No orders yet.
+            <a href="{{ url_for('products.index') }}" class="text-accent fw-600">Start shopping</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- ─── Profile Summary ─── -->
+      <div class="col-lg-4">
+        <div class="profile-card card">
+          <div class="avatar">{{ user.name[0].upper() }}</div>
+          <h5 class="text-center mb-3" style="font-family:'Playfair Display',serif;">{{ user.name }}</h5>
+          {% if user.role == 'admin' %}
+          <div class="text-center mb-3">
+            <span class="badge" style="background:var(--accent);color:var(--charcoal);border-radius:20px;padding:4px 14px;">
+              <i class="bi bi-shield-check me-1"></i>Admin
+            </span>
+          </div>
+          {% endif %}
+
+          <dl class="profile-info">
+            <dt>Email</dt>
+            <dd>{{ user.email }}</dd>
+            <dt>Phone</dt>
+            <dd>{{ user.phone or 'Not provided' }}</dd>
+            <dt>Role</dt>
+            <dd>{{ user.role|title }}</dd>
+          </dl>
+
+          <div class="d-grid gap-2 mt-3">
+            <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-accent btn-sm">
+              <i class="bi bi-person-gear me-2"></i>Edit Profile
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm"
+               style="border:1.5px solid var(--border);border-radius:8px;color:var(--danger);font-weight:600;">
+              <i class="bi bi-box-arrow-right me-2"></i>Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

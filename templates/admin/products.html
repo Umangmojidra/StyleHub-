@@ -1,0 +1,530 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin — Inventory & Products{% endblock %}
+
+{% block admin_css %}
+<style>
+  /* ── Inventory stat cards ── */
+  .inv-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .inv-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.07); }
+  .inv-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; flex-shrink: 0;
+  }
+  .inv-value { font-size: 1.7rem; font-weight: 700; line-height: 1; color: var(--charcoal); }
+  .inv-label { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── Filters ── */
+  .filter-bar {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-size: .8rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--charcoal);
+    color: #fff;
+    border-color: var(--charcoal);
+  }
+  .filter-btn.out.active   { background: #c0392b; border-color: #c0392b; }
+  .filter-btn.low.active   { background: #e67e22; border-color: #e67e22; }
+  .filter-btn.ok.active    { background: #27ae60; border-color: #27ae60; }
+
+  /* ── Table ── */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    background: #f8f4ef;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: .65rem 1rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: .8rem 1rem;
+    font-size: .86rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td     { background: #fafaf8; }
+  .table-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .table-card:hover { transform: none; box-shadow: none; }
+
+  /* ── Stock badges ── */
+  .s-out { background: #f8d7da; color: #721c24; }
+  .s-low { background: #fff3cd; color: #856404; }
+  .s-ok  { background: #d4edda; color: #155724; }
+  .stock-pill {
+    font-size: .75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ── Action buttons ── */
+  .btn-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .15s;
+    font-size: .85rem;
+    color: var(--charcoal);
+    text-decoration: none;
+  }
+  .btn-icon:hover { background: var(--charcoal); color: #fff; border-color: var(--charcoal); }
+  .btn-icon.danger:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+  .btn-icon.edit:hover   { background: var(--accent); border-color: var(--accent); color: var(--charcoal); }
+
+  /* ── Add product modal ── */
+  .modal-header-custom {
+    background: var(--charcoal);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px 16px 0 0;
+  }
+  .modal-header-custom .btn-close { filter: invert(1); }
+  .form-label { font-weight: 600; font-size: .83rem; }
+  .img-preview-box {
+    width: 90px; height: 90px;
+    border-radius: 10px;
+    border: 1.5px dashed var(--border);
+    object-fit: cover;
+    background: #f8f4ef;
+  }
+  .inline-stock-form { display: inline-flex; align-items: center; gap: .4rem; }
+  .inline-stock-input {
+    width: 70px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: .84rem;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+  }
+  .inline-stock-input:focus { border-color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+
+<!-- ── Page Header ── -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <div class="admin-page-title">Inventory & Products</div>
+    <div class="text-muted-custom" style="font-size:.83rem;">Manage your product catalogue and stock levels</div>
+  </div>
+  <button class="btn btn-sm" style="background:var(--accent);color:var(--charcoal);font-weight:700;border-radius:10px;padding:8px 18px;"
+          data-bs-toggle="modal" data-bs-target="#addProductModal">
+    <i class="bi bi-plus-lg me-1"></i>Add Product
+  </button>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ 'danger' if cat=='danger' else 'success' if cat=='success' else 'warning' }} alert-dismissible fade show mb-3" style="border-radius:10px;font-size:.88rem;">
+    {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endwith %}
+
+<!-- ── Inventory Summary Cards ── -->
+{% if inv %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="inv-card">
+      <div class="inv-icon" style="background:#e8f4fd;color:#2980b9;"><i class="bi bi-box-seam"></i></div>
+      <div>
+        <div class="inv-value">{{ inv.total or 0 }}</div>
+        <div class="inv-label">Total Products</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="inv-card">
+      <div class="inv-icon" style="background:#d4edda;color:#155724;"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <div class="inv-value">{{ inv.in_stock or 0 }}</div>
+        <div class="inv-label">In Stock (≥10)</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="inv-card">
+      <div class="inv-icon" style="background:#fff3cd;color:#856404;"><i class="bi bi-exclamation-triangle"></i></div>
+      <div>
+        <div class="inv-value">{{ inv.low_stock or 0 }}</div>
+        <div class="inv-label">Low Stock (1–9)</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="inv-card">
+      <div class="inv-icon" style="background:#f8d7da;color:#721c24;"><i class="bi bi-x-circle"></i></div>
+      <div>
+        <div class="inv-value">{{ inv.out_of_stock or 0 }}</div>
+        <div class="inv-label">Out of Stock</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="inv-card" style="background:linear-gradient(135deg,var(--charcoal),#2d2320);border:none;">
+      <div class="inv-icon" style="background:rgba(201,169,110,.2);color:var(--accent);"><i class="bi bi-currency-rupee"></i></div>
+      <div>
+        <div class="inv-value" style="color:#fff;">₹{{ "{:,.0f}".format(inv.inventory_value|float) }}</div>
+        <div class="inv-label" style="color:#aaa;">Total Inventory Value (stock × price)</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Filter Bar ── -->
+<form method="GET" action="{{ url_for('admin.products') }}" class="filter-bar mb-3" id="filterForm">
+  <div style="flex:1;min-width:200px;">
+    <div class="input-group input-group-sm">
+      <span class="input-group-text" style="border-radius:8px 0 0 8px;border-color:var(--border);background:#f8f4ef;">
+        <i class="bi bi-search text-muted"></i>
+      </span>
+      <input type="text" name="q" class="form-control form-control-sm" placeholder="Search product name or ID…"
+             value="{{ search }}" style="border-radius:0 8px 8px 0;border-color:var(--border);">
+    </div>
+  </div>
+
+  <select name="cat" class="form-select form-select-sm" style="width:auto;border-color:var(--border);border-radius:8px;" onchange="this.form.submit()">
+    <option value="">All Categories</option>
+    {% for cat in categories %}
+    <option value="{{ cat.cat_id }}" {{ 'selected' if cat_filter == cat.cat_id }}>{{ cat.category_name }}</option>
+    {% endfor %}
+  </select>
+
+  <div class="d-flex gap-1 flex-wrap">
+    <a href="{{ url_for('admin.products', q=search, cat=cat_filter) }}"
+       class="filter-btn {{ 'active' if not stock_filter }}">All</a>
+    <a href="{{ url_for('admin.products', q=search, cat=cat_filter, stock='ok') }}"
+       class="filter-btn ok {{ 'active' if stock_filter == 'ok' }}">
+      <i class="bi bi-check-circle me-1"></i>In Stock
+    </a>
+    <a href="{{ url_for('admin.products', q=search, cat=cat_filter, stock='low') }}"
+       class="filter-btn low {{ 'active' if stock_filter == 'low' }}">
+      <i class="bi bi-exclamation-triangle me-1"></i>Low Stock
+    </a>
+    <a href="{{ url_for('admin.products', q=search, cat=cat_filter, stock='out') }}"
+       class="filter-btn out {{ 'active' if stock_filter == 'out' }}">
+      <i class="bi bi-x-circle me-1"></i>Out of Stock
+    </a>
+  </div>
+
+  <button type="submit" class="btn btn-sm btn-dark" style="border-radius:8px;">
+    <i class="bi bi-search me-1"></i>Search
+  </button>
+  {% if search or cat_filter or stock_filter %}
+  <a href="{{ url_for('admin.products') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
+    <i class="bi bi-x-lg me-1"></i>Clear
+  </a>
+  {% endif %}
+</form>
+
+<!-- ── Products Table ── -->
+<div class="table-card card">
+  <div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-weight:700;font-size:.9rem;">
+      {{ products|length }} product{{ 's' if products|length != 1 }}
+      {% if stock_filter == 'out' %}<span style="color:#c0392b;"> — Out of Stock</span>
+      {% elif stock_filter == 'low' %}<span style="color:#e67e22;"> — Low Stock</span>
+      {% elif stock_filter == 'ok' %}<span style="color:#27ae60;"> — In Stock</span>{% endif %}
+    </span>
+    <span style="font-size:.78rem;color:var(--muted);">
+      <i class="bi bi-pencil-square me-1"></i>Click stock number to update inline
+    </span>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Discount</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th style="text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if products %}
+          {% for p in products %}
+          <tr id="row-{{ p.product_id }}">
+            <!-- Product -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ p.image or 'https://placehold.co/44x44/f5f0ea/c9a96e?text=P' }}"
+                     alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;">
+                <div>
+                  <div style="font-weight:600;font-size:.86rem;">{{ p.name }}</div>
+                  <div style="font-size:.73rem;color:var(--muted);">{{ p.product_id }}</div>
+                </div>
+              </div>
+            </td>
+            <!-- Category -->
+            <td style="font-size:.82rem;color:var(--muted);">{{ p.category_name or '—' }}</td>
+            <!-- Price -->
+            <td style="font-weight:700;">₹{{ "%.0f"|format(p.price) }}</td>
+            <!-- Discount -->
+            <td>
+              {% if p.discount and p.discount > 0 %}
+                <span style="background:#fce4ec;color:#880e4f;font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:20px;">
+                  {{ p.discount|int }}% OFF
+                </span>
+              {% else %}
+                <span style="color:var(--muted);">—</span>
+              {% endif %}
+            </td>
+            <!-- Stock (inline editable) -->
+            <td>
+              <form method="POST" action="{{ url_for('admin.update_stock', product_id=p.product_id) }}"
+                    class="inline-stock-form" title="Edit stock and press Enter">
+                <input type="number" name="stock" class="inline-stock-input"
+                       value="{{ p.stock }}" min="0"
+                       onkeydown="if(event.key==='Enter'){this.form.submit();}"
+                       title="Edit and press Enter to save">
+                <button type="submit" class="btn-icon edit" title="Save stock">
+                  <i class="bi bi-check"></i>
+                </button>
+              </form>
+            </td>
+            <!-- Status pill -->
+            <td>
+              {% if p.stock == 0 %}
+                <span class="stock-pill s-out"><i class="bi bi-x-circle-fill"></i>Out of Stock</span>
+              {% elif p.stock < 10 %}
+                <span class="stock-pill s-low"><i class="bi bi-exclamation-triangle-fill"></i>Low Stock</span>
+              {% else %}
+                <span class="stock-pill s-ok"><i class="bi bi-check-circle-fill"></i>In Stock</span>
+              {% endif %}
+            </td>
+            <!-- Actions -->
+            <td style="text-align:center;white-space:nowrap;">
+              <div class="d-flex gap-1 justify-content-center">
+                <a href="{{ url_for('admin.edit_product_form', product_id=p.product_id) }}"
+                   class="btn-icon edit" title="Edit product">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <button type="button" class="btn-icon danger" title="Delete product"
+                        onclick="confirmDelete('{{ p.product_id }}', '{{ p.name | replace("'","\\'")|e }}')">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="text-center py-5">
+              <div style="color:var(--muted);font-size:.9rem;">
+                <i class="bi bi-box-seam" style="font-size:2rem;display:block;margin-bottom:.5rem;"></i>
+                No products found.
+                {% if search or cat_filter or stock_filter %}
+                  <a href="{{ url_for('admin.products') }}" style="color:var(--accent);">Clear filters</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     ADD PRODUCT MODAL
+════════════════════════════════════════════════ -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;">
+
+      <div class="modal-header-custom d-flex align-items-center justify-content-between">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;">
+            <i class="bi bi-plus-circle me-2" style="color:var(--accent);"></i>Add New Product
+          </div>
+          <div style="font-size:.78rem;color:#aaa;margin-top:2px;">All fields marked * are required</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <form method="POST" action="{{ url_for('admin.add_product') }}" id="addProductForm">
+
+          <!-- Image preview strip -->
+          <div class="d-flex align-items-center gap-3 mb-4 p-3"
+               style="background:#f8f4ef;border-radius:12px;border:1px solid var(--border);">
+            <img id="addImgPreview"
+                 src="https://placehold.co/90x90/f5f0ea/c9a96e?text=Preview"
+                 class="img-preview-box" alt="Preview">
+            <div style="flex:1;">
+              <label class="form-label">Image URL</label>
+              <input type="url" name="image" id="addImageUrl" class="form-control form-control-sm"
+                     placeholder="https://images.unsplash.com/…"
+                     oninput="previewAdd(this.value)">
+              <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;">
+                Paste any public image URL. Preview updates automatically.
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <!-- Name -->
+            <div class="col-md-8">
+              <label class="form-label">Product Name *</label>
+              <input type="text" name="name" class="form-control" required
+                     placeholder="e.g. Classic White Oxford Shirt">
+            </div>
+            <!-- Category -->
+            <div class="col-md-4">
+              <label class="form-label">Category *</label>
+              <select name="cat_id" class="form-select" required>
+                <option value="">— Select —</option>
+                {% for cat in categories %}
+                <option value="{{ cat.cat_id }}">{{ cat.category_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control" rows="2"
+                        placeholder="Short product description…"></textarea>
+            </div>
+
+            <!-- Price -->
+            <div class="col-md-4">
+              <label class="form-label">Price (₹) *</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" name="price" class="form-control" required
+                       min="1" step="0.01" placeholder="0.00">
+              </div>
+            </div>
+            <!-- Discount -->
+            <div class="col-md-4">
+              <label class="form-label">Discount (%)</label>
+              <div class="input-group">
+                <input type="number" name="discount" class="form-control"
+                       min="0" max="100" step="0.1" value="0" placeholder="0">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <!-- Stock -->
+            <div class="col-md-4">
+              <label class="form-label">Stock Quantity *</label>
+              <input type="number" name="stock" class="form-control" required
+                     min="0" value="0" placeholder="0">
+            </div>
+
+            <!-- Size / Color -->
+            <div class="col-md-6">
+              <label class="form-label">Available Sizes</label>
+              <input type="text" name="size" class="form-control"
+                     placeholder="e.g. S,M,L,XL">
+              <div style="font-size:.74rem;color:var(--muted);margin-top:3px;">Comma-separated</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Color</label>
+              <input type="text" name="color" class="form-control" placeholder="e.g. White">
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="d-flex gap-2 mt-4 justify-content-end">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"
+                    style="border-radius:8px;">Cancel</button>
+            <button type="submit" class="btn"
+                    style="background:var(--accent);color:var(--charcoal);font-weight:700;border-radius:8px;padding:8px 24px;">
+              <i class="bi bi-plus-circle me-2"></i>Add Product
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Hidden delete form ── -->
+<form method="POST" id="deleteForm" style="display:none;">
+  <input type="hidden" name="_confirm" value="1">
+</form>
+
+{% endblock %}
+
+
+{% block admin_js %}
+<script>
+  /* ── Image preview for add modal ── */
+  function previewAdd(url) {
+    const img = document.getElementById('addImgPreview');
+    if (url.trim()) {
+      img.src = url;
+      img.onerror = () => { img.src = 'https://placehold.co/90x90/f5f0ea/c9a96e?text=Error'; };
+    } else {
+      img.src = 'https://placehold.co/90x90/f5f0ea/c9a96e?text=Preview';
+    }
+  }
+
+  /* ── Delete confirmation ── */
+  function confirmDelete(productId, productName) {
+    if (!confirm(`Delete "${productName}"?\n\nThis will permanently remove the product and clear it from all carts.`)) return;
+    const form = document.getElementById('deleteForm');
+    form.action = `/admin/products/${productId}/delete`;
+    form.method = 'POST';
+    form.submit();
+  }
+
+  /* ── Re-open add modal if there were flash errors ── */
+  {% if 'required' in (get_flashed_messages()|join(' ')) %}
+    document.addEventListener('DOMContentLoaded', () => {
+      new bootstrap.Modal(document.getElementById('addProductModal')).show();
+    });
+  {% endif %}
+</script>
+{% endblock %}

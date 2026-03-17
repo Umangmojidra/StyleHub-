@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}StyleHub{% endblock %} — StyleHub</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --cream:   #f8f4ef;
+      --charcoal:#1c1c1e;
+      --accent:  #c9a96e;
+      --accent2: #8b5e3c;
+      --muted:   #6b6b6b;
+      --border:  #e4ddd4;
+      --success: #2d8a4e;
+      --danger:  #c0392b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3, h4, .brand { font-family: 'Playfair Display', serif; }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: var(--charcoal) !important;
+      border-bottom: 2px solid var(--accent);
+      padding: 0.75rem 0;
+    }
+    .navbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--accent) !important;
+      letter-spacing: 1px;
+    }
+    .navbar-brand span { color: #fff; }
+    .nav-link {
+      color: #d4c9ba !important;
+      font-weight: 500;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      transition: color .2s;
+      padding: .5rem .9rem !important;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--accent) !important; }
+
+    .cart-badge {
+      background: var(--accent);
+      color: var(--charcoal);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .btn-nav-primary {
+      background: var(--accent);
+      color: var(--charcoal);
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 18px;
+      font-size: 0.85rem;
+      transition: background .2s, transform .15s;
+    }
+    .btn-nav-primary:hover { background: #b8935c; transform: translateY(-1px); color: var(--charcoal); }
+
+    /* ── Flash messages ── */
+    .flash-container { position: fixed; top: 70px; right: 20px; z-index: 9999; min-width: 280px; }
+    .alert {
+      border: none;
+      border-radius: 10px;
+      font-size: .88rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,.12);
+      animation: slideIn .3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .alert-success { background: #d4edda; color: #155724; }
+    .alert-danger  { background: #f8d7da; color: #721c24; }
+    .alert-warning { background: #fff3cd; color: #856404; }
+    .alert-info    { background: #d1ecf1; color: #0c5460; }
+
+    /* ── Page wrapper ── */
+    main { flex: 1; }
+
+    /* ── Cards ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,.05);
+      transition: box-shadow .25s, transform .25s;
+    }
+    .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.1); transform: translateY(-3px); }
+
+    /* ── Buttons ── */
+    .btn-accent {
+      background: var(--accent);
+      color: var(--charcoal);
+      border: none;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-accent:hover { background: var(--accent2); color: #fff; transform: translateY(-1px); }
+
+    .btn-outline-accent {
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+      border-radius: 8px;
+      background: transparent;
+      transition: all .2s;
+    }
+    .btn-outline-accent:hover { background: var(--accent); color: var(--charcoal); }
+
+    .btn-dark-custom {
+      background: var(--charcoal);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-dark-custom:hover { background: #333; color: #fff; transform: translateY(-1px); }
+
+    /* ── Forms ── */
+    .form-control, .form-select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      padding: .6rem .9rem;
+      background: #fafaf8;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201,169,110,.2);
+      background: #fff;
+    }
+    .form-label { font-weight: 500; font-size: .88rem; color: var(--charcoal); margin-bottom: .4rem; }
+
+    /* ── Badge ── */
+    .badge-status {
+      font-size: .75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .status-pending   { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #d4edda; color: #155724; }
+    .status-shipped   { background: #cce5ff; color: #004085; }
+    .status-delivered { background: #d1ecf1; color: #0c5460; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+
+    /* ── Section headers ── */
+    .section-header {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: .25rem;
+    }
+    .section-sub { color: var(--muted); font-size: .9rem; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--charcoal);
+      color: #9a9a9a;
+      font-size: .82rem;
+      padding: 2rem 0 1.2rem;
+      margin-top: auto;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--accent);
+    }
+
+    /* ── Utilities ── */
+    .text-accent { color: var(--accent); }
+    .text-muted-custom { color: var(--muted); }
+    .bg-cream { background: var(--cream); }
+    .divider { border-top: 1px solid var(--border); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .navbar-brand { font-size: 1.3rem; }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- ─── Navbar ─── -->
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('products.index') }}">
+        Style<span>Hub</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <i class="bi bi-list text-white fs-4"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav me-auto gap-1 ms-3">
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'products.index' %}active{% endif %}"
+               href="{{ url_for('products.index') }}">
+              <i class="bi bi-grid me-1"></i>Shop
+            </a>
+          </li>
+          {% if session.get('token') %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'products.dashboard' %}active{% endif %}"
+               href="{{ url_for('products.dashboard') }}">
+              <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'orders.view_orders' %}active{% endif %}"
+               href="{{ url_for('orders.view_orders') }}">
+              <i class="bi bi-bag me-1"></i>Orders
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+
+        <ul class="navbar-nav gap-2 align-items-center">
+          {% if session.get('token') %}
+            <li class="nav-item">
+              <a class="nav-link position-relative" href="{{ url_for('cart.view_cart') }}">
+                <i class="bi bi-cart3 fs-5"></i>
+                <span class="cart-badge ms-1" id="cart-count">0</span>
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
+                 data-bs-toggle="dropdown">
+                <div style="width:30px;height:30px;background:var(--accent);border-radius:50%;
+                            display:flex;align-items:center;justify-content:center;color:#1c1c1e;
+                            font-weight:700;font-size:.85rem;">
+                  {{ session.get('user_name', 'U')[0].upper() }}
+                </div>
+                <span class="d-none d-md-inline">{{ session.get('user_name', 'User').split()[0] }}</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius:12px;">
+                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                  <i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('products.dashboard') }}">
+                  <i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('payment.list_addresses') }}">
+                  <i class="bi bi-geo-alt me-2"></i>My Addresses</a></li>
+                {% if session.get('user_role') == 'admin' %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-warning fw-600" href="{{ url_for('admin.dashboard') }}">
+                  <i class="bi bi-shield-check me-2"></i>Admin Panel</a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                  <i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+              </ul>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-nav-primary" href="{{ url_for('auth.register') }}">Sign Up</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── Flash Messages ─── -->
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible d-flex align-items-center gap-2 mb-2" role="alert">
+            {% if category == 'success' %}<i class="bi bi-check-circle-fill"></i>
+            {% elif category == 'danger' %}<i class="bi bi-exclamation-circle-fill"></i>
+            {% elif category == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+            {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+            <span>{{ message }}</span>
+            <button type="button" class="btn-close btn-sm ms-auto" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- ─── Main Content ─── -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ─── Footer ─── -->
+  <footer>
+    <div class="container">
+      <div class="row g-4 mb-3">
+        <div class="col-md-4">
+          <div class="footer-brand mb-2">StyleHub</div>
+          <p class="mb-0" style="line-height:1.7;">India's premium online clothing destination. Quality meets style.</p>
+        </div>
+        <div class="col-md-2">
+          <h6 class="text-white mb-3 fw-600">Shop</h6>
+          <ul class="list-unstyled">
+            <li><a href="{{ url_for('products.index') }}">All Products</a></li>
+            <li><a href="{{ url_for('products.index') }}?category=1">Men</a></li>
+            <li><a href="{{ url_for('products.index') }}?category=2">Women</a></li>
+            <li><a href="{{ url_for('products.index') }}?category=3">Kids</a></li>
+          </ul>
+        </div>
+        <div class="col-md-2">
+          <h6 class="text-white mb-3">Account</h6>
+          <ul class="list-unstyled">
+            {% if session.get('token') %}
+              <li><a href="{{ url_for('products.dashboard') }}">Dashboard</a></li>
+              <li><a href="{{ url_for('orders.view_orders') }}">My Orders</a></li>
+              <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+              <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+              <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="text-white mb-3">Contact</h6>
+          <p><i class="bi bi-envelope me-2"></i>support@stylehub.in</p>
+          <p><i class="bi bi-telephone me-2"></i>1800-123-4567</p>
+          <div class="d-flex gap-3 mt-2">
+            <a href="#"><i class="bi bi-instagram fs-5"></i></a>
+            <a href="#"><i class="bi bi-facebook fs-5"></i></a>
+            <a href="#"><i class="bi bi-twitter-x fs-5"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="divider pt-3 text-center">
+        <p class="mb-0">© 2025 StyleHub. Built with ❤️ in India.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Auto-dismiss alerts after 4 seconds
+    setTimeout(() => {
+      document.querySelectorAll('.alert').forEach(el => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+        bsAlert.close();
+      });
+    }, 4000);
+
+    // Update cart count in navbar
+    async function updateCartCount() {
+      try {
+        const res = await fetch('/api/cart');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('cart-count').textContent = data.length || 0;
+        }
+      } catch(e) {}
+    }
+    {% if session.get('token') %}
+    updateCartCount();
+    {% endif %}
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
