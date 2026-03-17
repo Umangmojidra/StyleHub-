@@ -171,7 +171,7 @@ Razorpay account (test keys for development)
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/Umangmojidra/stylehub.git
+git clone https://github.com/Umangmojidra/StyleHub-.git
 cd stylehub
 
 python -m venv venv
@@ -292,5 +292,3 @@ This project is licensed under the [MIT License](LICENSE).
 <p align="center">
   <i>Built to demonstrate end-to-end full-stack web development with secure authentication, payment integration, and admin operations.</i>
 </p>
-#   S t y l e H u b -  
- 
