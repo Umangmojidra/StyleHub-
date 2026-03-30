@@ -462,7 +462,7 @@ def sales():
     )
 
     user = get_current_user()
-    return render_template('admin/sales.html',
+    return render_template('admin/admin_sales.html',
                            totals=totals,
                            monthly=monthly,
                            top_products=top_products,
